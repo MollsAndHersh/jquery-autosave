@@ -4,29 +4,13 @@
 
   <link type="text/css" rel="stylesheet" href="styles.css" />
 
-  <script type="text/javascript" src="http://code.jquery.com/jquery-1.4.min.js"></script>
+  <script type="text/javascript" src="http://code.jquery.com/jquery-1.7.min.js"></script>
   <script type="text/javascript" src="../src/jquery.autosave.js"></script>
 
   <script type="text/javascript">
     jQuery(function($) {
       $("form").autosave({
-        callbacks: {
-          trigger: ["change", function() {
-            var self = this;
-
-            $("[name=save]").click(function() {
-              self.save();
-            });
-          }],
-          save: {
-            method: "ajax",
-            options: {
-              success: function() {
-                alert("saved!");
-              }
-            }
-          }
-        }
+        // ???
       });
     });
   </script>
