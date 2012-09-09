@@ -9,8 +9,13 @@
   <script type="text/javascript" src="../src/jquery.autosave.js"></script>
 
   <script type="text/javascript">
-    jQuery(function($) {
-      $("form").autosave();
+    jQuery(function( $ ) {
+        $("#example1").autosave({
+            trigger: function() {},
+            ready: function() {
+                console.log('ready');
+            }
+        });
     });
   </script>
   </head>

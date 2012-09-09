@@ -16,11 +16,18 @@ Dual licensed under the MIT and BSD licenses.
 
 (function( $, undefined ) {
 
-var handlerTypes = [ "trigger", "scope", "data", "condition", "store" ],
+var concat = Array.prototype.concat,
+    handlerTypes = [ "trigger", "scope", "data", "condition", "store" ],
     inputChangeEvents = [ "change", "keyup" ],
     namespace = "kf",
     uuid = 0,
     widgetName = "autosave";
+
+// Used to normalize function arguments that can be either
+// an array of values or a single value
+var arr = function( obj ) {
+    return $.isArray( obj ) ? obj : [ obj ];
+};
 
 // https://gist.github.com/3507025
 var getType = (function() {
@@ -48,7 +55,7 @@ $.widget( namespace + "." + widgetName, {
     options: {
         ignore: ":hidden",
 
-        // Triggers
+        // Handlers
         trigger: "interval",
         scope: "all",
         data: "serialize",
@@ -56,13 +63,16 @@ $.widget( namespace + "." + widgetName, {
         store: "ajax",
 
         // Callbacks
-        change: null,
-        complete: null
+        change: $.noop,
+        complete: $.noop,
+        ready: $.noop
     },
 
     _create: function() {
-        var form,
-            element = this.element;
+        var form, handler,
+            self = this,
+            deferreds = [],
+            element = self.element;
 
         if ( element.is( "form" ) ) {
             form = element;
@@ -71,16 +81,21 @@ $.widget( namespace + "." + widgetName, {
             form = element.closest( "form" );
         }
 
-        if ( !( this.form = form ).length ) {
-            throw "Unable to locate form!";
+        if ( !( self.form = form ).length ) {
+            self._error( "Unable to locate form" );
         }
 
-        $.each( inputChangeEvents, $.proxy(function( i, eventName ) {
-            element.on( eventName + this.eventNamespace, ":input", $.proxy( this._change, this ) );
-        }, this ));
+        self._handlers = {};
 
-        // Internal handlers cache
-        this._handlers = {};
+        $.each( inputChangeEvents, function( i, eventName ) {
+            element.on( eventName + self.eventNamespace, ":input", $.proxy( self._change, self ) );
+        });
+
+        $.each( handlerTypes, function( i, handlerType ) {
+            deferreds.push( self.addHandler( handlerType, arr( self.options[ handlerType ] ) ) );
+        });
+
+        $.when.apply( null, deferreds ).done( self.options.ready );
     },
 
     // FIXME: https://github.com/nervetattoo/jquery-autosave/issues/18
@@ -97,43 +112,42 @@ $.widget( namespace + "." + widgetName, {
         throw new Error( "(" + widgetName + ") " + message );
     },
 
-    _resolveHandler: function( handler ) {
-        var resolved = {},
-            type = typeof handler;
+    _resolveHandler: function( type, handler ) {
+        var typeOf,
+            resolved = [],
+            self = this;
 
-        // Shortcut for { run: function() {} }
-        if ( type == "function" ) {
-            resolved.run = handler;
-
-        // The name of a public handler
-        } else if ( type == "string" ) {
-            resolved = _handlers[ handler ];
-
-        // A Handler object or the settings for a new Handler object
-        } else if ( type == "object" ) {
-            resolved = handler;
+        if ( !handler ) {
+            return resolved;
         }
 
-        if ( $.isPlainObject( resolved ) && $.isFunction( resolved.run ) ) {
-            resolved = new Handler( resolved );
+        $.each( arr( handler ), function( i, handler ) {
+            typeOf = typeof handler;
 
-        } else if ( !resolved || !isHandler( resolved ) || !$.isFunction( resolved.run ) ) {
-            this._error( "Invalid handler" );
-        }
+            if ( typeOf == "function" ) {
+                handler = { run: handler };
 
-        return resolved;
-    },
+            } else if ( typeOf == "string" ) {
+                handler = _handlers[ handler ];
+            }
 
-    _resolveHandlers: function( handlers ) {
-        var resolved = [];
+            if ( typeof handler != "object" ) {
+                self._error( "Unable to resolve Handler" );
 
-        if ( !$.isArray( handlers ) ) {
-            handlers = [ handlers ];
-        }
+            } else {
+                handler.type = handler.type || type;
 
-        $.each( handlers, $.proxy(function( i, handler ) {
-            resolved.push( this._resolveHandler( handler ) );
-        }, this ));
+                if ( $.inArray( handler.type, handlerTypes ) < 0 ) {
+                    self._error( "Invalid Handler type: " + handler.type );
+                }
+            }
+
+            if ( !isHandler( handler ) ) {
+                handler = new Handler( handler );
+            }
+
+            resolved.push( handler );
+        });
 
         return resolved;
     },
@@ -142,26 +156,24 @@ $.widget( namespace + "." + widgetName, {
         // TODO
     },
 
-    _setOption: function( key, value ) {
-        var handler;
+    addHandler: function( type, handler ) {
+        var handlers,
+            deferreds = [],
+            self = this;
 
-        if ( $.inArray( key, handlerTypes ) ) {
-
-            // TODO: use promise pattern
-            this.removeHandler( this.handlers[ key ] );
-            this.addHandler( value );
+        // args: handler
+        if ( arguments.length == 1 ) {
+            success = handler;
+            handler = type;
+            type = undefined;
         }
 
-        $.Widget.prototype._setOption.apply( this, arguments );
-    },
+        $.each( this._resolveHandler( type, handler ), function( i, handler ) {
+            self._handlers[ handler.uuid ] = handler;
+            deferreds.push( handler.setup.call( self, handler.options ) );
+        });
 
-    // TODO: use promise pattern
-    addHandler: function( handler ) {
-        $.each( this._resolveHandlers( handler ), $.proxy(function( i, handler ) {
-            if ( handler.setup.call( this, handler.options ) !== false ) {
-                this._handlers[ handler.uuid = ++uuid ] = handler;
-            }
-        }, this ));
+        return $.when.apply( null, deferreds );
     },
 
     destroy: function() {
@@ -187,11 +199,7 @@ $.widget( namespace + "." + widgetName, {
 
     // TODO: use promise pattern
     removeHandler: function( handler ) {
-        $.each( this._resolveHandler( handler ), $.proxy(function( i, handler ) {
-            if ( handler.teardown.call( this, handler.options ) !== false ) {
-                delete this._handlers[ handler.uuid ];
-            }
-        }, this ));
+        // FIXME
     }
 });
 
@@ -210,14 +218,16 @@ function Handler( settings ) {
     }
 
     $.extend( this, settings );
+
+    this.uuid = uuid++;
 }
 
 Handler.prototype = {
     constructor: Handler,
     options: {},
-    run: function() {},
-    setup: function() {},
-    teardown: function() {}
+    run: $.noop,
+    setup: $.noop,
+    teardown: $.noop
 };
 
 })( jQuery );
