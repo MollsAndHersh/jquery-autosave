@@ -16,7 +16,7 @@ Dual licensed under the MIT and BSD licenses.
 
 (function( $, undefined ) {
 
-var concat = Array.prototype.concat,
+var handlers,
     handlerTypes = [ "trigger", "scope", "data", "condition", "store" ],
     inputChangeEvents = [ "change", "keyup" ],
     namespace = "kf",
@@ -49,6 +49,10 @@ var getType = (function() {
     }
 }());
 
+var isHandler = function( object ) {
+    return getType( object ) == "handler";
+};
+
 $.widget( namespace + "." + widgetName, {
     version: "2.0.0-rc1",
 
@@ -68,8 +72,10 @@ $.widget( namespace + "." + widgetName, {
         ready: $.noop
     },
 
+    handlers: [],
+
     _create: function() {
-        var form, handler,
+        var form,
             self = this,
             deferreds = [],
             element = self.element;
@@ -84,8 +90,6 @@ $.widget( namespace + "." + widgetName, {
         if ( !( self.form = form ).length ) {
             self._error( "Unable to locate form" );
         }
-
-        self._handlers = {};
 
         $.each( inputChangeEvents, function( i, eventName ) {
             element.on( eventName + self.eventNamespace, ":input", $.proxy( self._change, self ) );
@@ -128,7 +132,7 @@ $.widget( namespace + "." + widgetName, {
                 handler = { run: handler };
 
             } else if ( typeOf == "string" ) {
-                handler = _handlers[ handler ];
+                handler = handlers[ handler ];
             }
 
             if ( typeof handler != "object" ) {
@@ -152,10 +156,6 @@ $.widget( namespace + "." + widgetName, {
         return resolved;
     },
 
-    _save: function() {
-        // TODO
-    },
-
     addHandler: function( type, handler ) {
         var handlers,
             deferreds = [],
@@ -169,8 +169,8 @@ $.widget( namespace + "." + widgetName, {
         }
 
         $.each( this._resolveHandler( type, handler ), function( i, handler ) {
-            self._handlers[ handler.uuid ] = handler;
             deferreds.push( handler.setup.call( self, handler.options ) );
+            self.handlers.push( handler );
         });
 
         return $.when.apply( null, deferreds );
@@ -197,19 +197,19 @@ $.widget( namespace + "." + widgetName, {
         }
     },
 
-    // TODO: use promise pattern
     removeHandler: function( handler ) {
-        // FIXME
+        // TODO
+    },
+
+    save: function() {
+        // TODO
     }
 });
 
-// Public handler cache
-var _handlers = $[ namespace ][ widgetName ][ "handlers" ] = {};
+// Public handlers
+$[ namespace ][ widgetName ][ "handlers" ] = handlers = {};
 
-function isHandler( object ) {
-    return getType( object ) == "handler";
-}
-
+// Handler Class
 function Handler( settings ) {
 
     // Allow calling without the 'new' operator
