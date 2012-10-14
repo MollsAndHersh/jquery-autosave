@@ -17,7 +17,9 @@ Dual licensed under the MIT and BSD licenses.
 (function( $, undefined ) {
 
 var handlers,
+    classNames = [ "change" ],
     handlerTypes = [ "trigger", "scope", "data", "condition", "store" ],
+    handlerTypesLength = handlerTypes.length,
     inputChangeEvents = [ "change", "keyup" ],
     namespace = "kf",
     uuid = 0,
@@ -53,6 +55,10 @@ var isHandler = function( object ) {
     return getType( object ) == "handler";
 };
 
+var whenArray = function( deferreds ) {
+    return $.when.apply( null, deferreds );
+};
+
 $.widget( namespace + "." + widgetName, {
     version: "2.0.0-rc1",
 
@@ -68,11 +74,25 @@ $.widget( namespace + "." + widgetName, {
 
         // Callbacks
         change: $.noop,
-        complete: $.noop,
+        save: $.noop,
         ready: $.noop
     },
 
-    handlers: [],
+    handlers: {},
+    handlersByName: {},
+    handlersByType: (function() {
+        var handlerType,
+            handlersByType = {},
+            i = handlerTypesLength;
+
+        while ( ( handlerType = handlerTypes[ --i ] ) ) {
+            handlersByType[ handlerType ] = {};
+        }
+
+        return handlersByType;
+    })(),
+
+    _classNames: {},
 
     _create: function() {
         var form,
@@ -91,15 +111,19 @@ $.widget( namespace + "." + widgetName, {
             self._error( "Unable to locate form" );
         }
 
+        $.each( classNames, function( i, className ) {
+            self._classNames[ className ] = self.widgetFullName + "-" + className;
+        });
+
         $.each( inputChangeEvents, function( i, eventName ) {
             element.on( eventName + self.eventNamespace, ":input", $.proxy( self._change, self ) );
         });
 
-        $.each( handlerTypes, function( i, handlerType ) {
-            deferreds.push( self.addHandler( handlerType, arr( self.options[ handlerType ] ) ) );
+        $.each( handlerTypes, function( i, type ) {
+            deferreds.push( self.addHandler( type, self.options[ type ] ) );
         });
 
-        $.when.apply( null, deferreds ).done( self.options.ready );
+        whenArray( deferreds ).done( self.options.ready );
     },
 
     // FIXME: https://github.com/nervetattoo/jquery-autosave/issues/18
@@ -107,7 +131,7 @@ $.widget( namespace + "." + widgetName, {
         var target = $( event.target );
 
         if ( !target.hasClass( this.options.ignore ) ) {
-            target.addClass( this.widgetFullName + "-changed" );
+            target.addClass( this._classNames.change );
             this.element._trigger( "change", event );
         }
     },
@@ -156,6 +180,19 @@ $.widget( namespace + "." + widgetName, {
         return resolved;
     },
 
+    _setOption: function( key, value ) {
+        if ( $.inArray( key, handlerTypes ) >= 0 ) {
+            this._updateHandler( key, value );
+        }
+
+        $.Widget.prototype._setOption.apply( this, arguments );
+    },
+
+    _updateHandler: function( type, handler ) {
+        // TODO: remove all previous handlers of same type
+        // TODO: add all new handlers for same type
+    },
+
     addHandler: function( type, handler ) {
         var handlers,
             deferreds = [],
@@ -168,22 +205,27 @@ $.widget( namespace + "." + widgetName, {
             type = undefined;
         }
 
+        // TODO: handle namespaced types (like "my.trigger")
         $.each( this._resolveHandler( type, handler ), function( i, handler ) {
             deferreds.push( handler.setup.call( self, handler.options ) );
-            self.handlers.push( handler );
+            self.handlers[ handler.uuid ] = handler;
+            self.handlersByType[ handler.type ][ handler.uuid ] = handler;
         });
 
-        return $.when.apply( null, deferreds );
+        return whenArray( deferreds );
     },
 
     destroy: function() {
         this.interval();
 
-        this.element
-            .off( this.eventNamespace )
-            .find( ":input" ).removeClass( this.widgetFullName + "-changed" );
+        this.element.off( this.eventNamespace );
+        this.inputs().removeClass( this._classNames.change );
 
         $.Widget.prototype.destroy.call( this );
+    },
+
+    inputs: function() {
+        return this.element.find( ":input" ).not( this.options.ignore );
     },
 
     interval: function( interval, callback ) {
@@ -201,8 +243,50 @@ $.widget( namespace + "." + widgetName, {
         // TODO
     },
 
-    save: function() {
-        // TODO
+    save: function( event, inputs, caller ) {
+        var args, argsLength, chain, deferred, handler, handlers,
+            deferreds = [],
+            index = 1,
+            lastIndex = 0,
+            self = this;
+
+        inputs = inputs ? $( inputs ).filter( ":input" ) : self.inputs();
+
+        // inputs, data, caller
+        args = [ inputs, {}, caller ];
+
+        (function next() {
+            deferred = new $.Deferred();
+            handlers = self.handlersByType[ handlerTypes[ index ] ];
+
+            for ( handler in handlers ) {
+                handler = handlers[ handler ];
+                chain = ( chain ? chain : deferred ).pipe(function() {
+                    return handler.run.apply( null, [ handler.options || {} ].concat( args.slice( 0, index ) ) );
+                });
+            }
+
+            chain.done(function( result ) {
+                if ( result === false ) {
+                    return;
+
+                } else if ( result !== undefined ) {
+                    args[ lastIndex ] = result;
+                }
+
+                lastIndex = index;
+
+                if ( ++index < handlerTypesLength ) {
+                    next();
+
+                } else {
+                    self._trigger( "save", event, arguments );
+                    self.inputs().removeClass( self._classNames.change );
+                }
+            });
+
+            deferred.resolve( args.slice( lastIndex, index ) );
+        })();
     }
 });
 

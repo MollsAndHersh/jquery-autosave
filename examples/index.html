@@ -12,14 +12,23 @@
     jQuery(function( $ ) {
         $("#example1").autosave({
             trigger: function() {},
-            scope: function() {},
-            data: function() {},
-            condition: function() {},
-            store: function() {},
+            scope: function( options, inputs ) {
+                return inputs.filter("[type=text]");
+            },
+            data: function(options, inputs, data) {
+                return inputs.serialize();
+            },
+            condition: function() {
+            },
+            store: function() {
+                console.log('storing some stuff', arguments);
+            },
             ready: function() {
                 console.log('ready');
             }
-        });
+        }).find("[type=text]").val("text");
+        
+        $("#example1").autosave("save");
     });
   </script>
   </head>
