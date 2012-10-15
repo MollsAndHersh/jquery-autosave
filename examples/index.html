@@ -11,24 +11,17 @@
   <script type="text/javascript">
     jQuery(function( $ ) {
         $("#example1").autosave({
-            trigger: function() {},
-            scope: function( options, inputs ) {
-                return inputs.filter("[type=text]");
-            },
-            data: function(options, inputs, data) {
-                return inputs.serialize();
-            },
-            condition: function() {
-            },
-            store: function() {
-                console.log('storing some stuff', arguments);
+            handler: function( options, data ) {
+                console.log('handler called');
             },
             ready: function() {
                 console.log('ready');
             }
         }).find("[type=text]").val("text");
-        
-        $("#example1").autosave("save");
+
+        $("#example1").autosave("save").done(function() {
+            console.log('done called with arguments:', arguments);
+        });
     });
   </script>
   </head>
