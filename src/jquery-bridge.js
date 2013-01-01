@@ -1,4 +1,3 @@
-// jQuery bridge
 $.fn[ namespace ] = function( options ) {
     options = $.extend( true, {}, Autosave.options, options );
 

@@ -1,8 +1,6 @@
-var namespace = "autosave",
-    classNames = namespacer( namespace, [ "change" ], "-", true ),
+var classNames = namespacer( namespace, [ "change" ], "-", true ),
     eventNames = namespacer( namespace, [ "change", "keyup" ] ),
-    inputEvents = join( eventNames, " " ),
-    uuid = 0;
+    inputEvents = join( eventNames, " " );
 
 function Autosave( element, options ) {
     var form;
@@ -36,7 +34,7 @@ function Autosave( element, options ) {
 }
 
 // Public Instance
-Autosave.prototype = {
+$.extend( Autosave.prototype, {
     addHandler: function( handler ) {
         var i, length,
             chain = new $.Deferred(),
@@ -129,7 +127,7 @@ Autosave.prototype = {
 
         return deferred.promise();
     }
-};
+});
 
 // Public Static
 $.extend( Autosave, {
@@ -137,6 +135,7 @@ $.extend( Autosave, {
     eventNames: eventNames,
     handlers: {},
     namespace: namespace,
+
     options: {
         handler: null,
         ignore: ":hidden",
@@ -146,5 +145,6 @@ $.extend( Autosave, {
         save: $.noop,
         ready: $.noop
     },
-    version: "<% pkg.version %>"
+
+    version: "<%= pkg.version %>"
 });

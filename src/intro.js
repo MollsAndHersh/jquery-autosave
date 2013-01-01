@@ -1,7 +1,5 @@
 /*!
-<%= pkg.name %> - v<%= pkg.version %>
-<%= grunt.template.today( "yyyy-mm-dd" ) %>
-
+<%= pkg.name %> - v<%= pkg.version %> - <%= grunt.template.today( "yyyy-mm-dd" ) %>
 <%= pkg.homepage %>
 <%= pkg.description %>
 
@@ -12,3 +10,4 @@ Released under the <%= grunt.util._.pluck( pkg.licenses, "type" ).join( ", " ) %
 (function( window, $, undefined ) {
 "use strict";
 
+var namespace = "autosave";

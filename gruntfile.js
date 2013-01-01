@@ -7,7 +7,8 @@ module.exports = function( grunt ) {
         concat: {
             basic: {
                 options: {
-                    process: true
+                    process: true,
+                    separator: "\n"
                 },
                 src: [
                     "src/intro.js",
