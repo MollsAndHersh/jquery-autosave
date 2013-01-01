@@ -12,7 +12,7 @@ The jQuery.autosave plugin automatically and unobtrusively saves form data based
 
 This plugin works strictly with forms and form inputs of any type. Any other elements fed to the plugin will be ignored. Currently, if you wish to autosave data on a per form basis, you should attach a separate instance of the plugin to each form.
 
-**Note**: the actual autosave instance (which is stored using jQuery's [.data()](http://api.jquery.com/data/) function) is only attached to **form elements**, even if those element weren't passed in directly.
+**Note**: the actual autosave instance (which is stored using jQuery"s [.data()](http://api.jquery.com/data/) function) is only attached to **form elements**, even if those element weren"t passed in directly.
 
 ## Options
 
@@ -41,7 +41,7 @@ This plugin works strictly with forms and form inputs of any type. Any other ele
 Options is a set of key/value pairs that can be passed into the plugin as the first argument upon initialization. The default values are shown above.
 
 * **namespace** _String_  
-  The namespace to append after event names and before class names that are used within the plugin. This will also be the key name for the autosave instance stored in each element's expando data.
+  The namespace to append after event names and before class names that are used within the plugin. This will also be the key name for the autosave instance stored in each element"s expando data.
 * **callbacks** _Object_  
   Contains a set of key/value pairs that define callback methods for the autosave process described above.
   * **trigger** _String, Object, Array, function_  
@@ -81,7 +81,7 @@ If you use this plugin as is (without providing any options), this is what you c
 
 1. **trigger** An autosave is triggered any time an input value changes.
 2. **scope** The scope of inputs is narrowed to include only those whose value has changed since the last autosave.
-3. **data** Data is gathered using jQuery's [.serialize()](http://api.jquery.com/serialize/) function.
+3. **data** Data is gathered using jQuery"s [.serialize()](http://api.jquery.com/serialize/) function.
 4. **condition** There are no conditions that need to pass to complete this save.
 5. **save** The data is posted to the current browser URL using the [jQuery.ajax()](http://api.jquery.com/jQuery.ajax/) function.
 
@@ -91,52 +91,52 @@ Callback methods are invoked by the plugin during the autosave process. There ar
 
     $("form").autosave({
 
-		// In all of these cases, "callbackName" refers to any of the callback
-		// options outlined above (trigger, scope, data, condition, save).
-	    callbacks: {
-		    // The simplest way to use a built-in callback is to pass in the
-			// method name as a string. Default callback options will be used.
-		    callbackName: "callbackMethod",
+        // In all of these cases, "callbackName" refers to any of the callback
+        // options outlined above (trigger, scope, data, condition, save).
+        callbacks: {
+            // The simplest way to use a built-in callback is to pass in the
+            // method name as a string. Default callback options will be used.
+            callbackName: "callbackMethod",
     
-			// You may also pass in the method name as a string and provide
-			// custom options by using an object.
-			callbackName: {
-			    method: "callbackMethod",
-				options: {
-				    // ...
-				}
-			},
+            // You may also pass in the method name as a string and provide
+            // custom options by using an object.
+            callbackName: {
+                method: "callbackMethod",
+                options: {
+                    // ...
+                }
+            },
     
-	        // An array of callbacks may also be provided.
-			callbackName: [
-			    "callbackMethod1",
-				{
-				    method: "callbackMethod2",
-					options: {
-					    // ...
-					}
-				}
-			],
+            // An array of callbacks may also be provided.
+            callbackName: [
+                "callbackMethod1",
+                {
+                    method: "callbackMethod2",
+                    options: {
+                        // ...
+                    }
+                }
+            ],
     
-	        // The simplest way to use a custom callback method is to pass
-			// in a function. The arguments provided to this function vary
-			// depending on the callback used.
-			callbackName: function() {
-			    // ...
-			},
+            // The simplest way to use a custom callback method is to pass
+            // in a function. The arguments provided to this function vary
+            // depending on the callback used.
+            callbackName: function() {
+                // ...
+            },
     
-	        // You may also pass in the method and custom options by using
-			// an object.
-			callbackName: {
-			    method: function(options) {
-				    // ...
-				},
-				options: {
-				   // ...
-				}
+            // You may also pass in the method and custom options by using
+            // an object.
+            callbackName: {
+                method: function(options) {
+                    // ...
+                },
+                options: {
+                   // ...
+                }
             }
-		}
-	});
+        }
+    });
 
 The names of these methods are detailed below along with the arguments that will be passed in when the methods are invoked. If an Array of callback methods is provided, they will be invoked in the order they were defined in the Array. Every callback method is called with the current instance as the context of the keyword _this_ making it easy to call any class property or function from within the callback method.
 
@@ -145,12 +145,12 @@ The names of these methods are detailed below along with the arguments that will
 ### Triggers
 
     $("form").autosave({
-	    callbacks: {
-			trigger: function(options) {
-				// ...
-			}
-		}
-	});
+        callbacks: {
+            trigger: function(options) {
+                // ...
+            }
+        }
+    });
 
 #### Methods
 
@@ -179,21 +179,21 @@ Trigger methods do not require a return value.
 ### Scope
 
     $("form").autosave({
-	    callbacks: {
-			scope: function(options, $inputs) {
-				// ...
+        callbacks: {
+            scope: function(options, $inputs) {
+                // ...
                 // Must return a jQuery Object.
-	            return $inputs;
-			}
-		}
-	});
+                return $inputs;
+            }
+        }
+    });
 
 #### Methods
 
 The built-in callback methods for narrowing the scope of inputs we will gather data from.
 
 * **all**  
-  Uses all valid form inputs (those that aren't ignored).
+  Uses all valid form inputs (those that aren"t ignored).
 * **changed**  
   Filters inputs down to only those that have had their value changed since the last autosave.
 * **modified**  
@@ -217,25 +217,25 @@ Scope methods should **return a jQuery object** containing the filtered inputs.
 ### Data
 
     $("form").autosave({
-	    callbacks: {
-			data: function(options, $inputs, formData) {
-				// ...
+        callbacks: {
+            data: function(options, $inputs, formData) {
+                // ...
                 // Must return some kind of dataset.
-	            return formData;
-			}
-		}
-	});
+                return formData;
+            }
+        }
+    });
 
 #### Methods
 
 The built-in callback methods for generating data from the inputs.
 
 * **serialize**  
-  Serializes a set of form elements as a String using jQuery's [.serialize()](http://api.jquery.com/serialize/) function.
+  Serializes a set of form elements as a String using jQuery"s [.serialize()](http://api.jquery.com/serialize/) function.
 * **serializeArray**  
-  Serializes a set of form elements as an Array using jQuery's [.serializeArray()](http://api.jquery.com/serializeArray/) function.
+  Serializes a set of form elements as an Array using jQuery"s [.serializeArray()](http://api.jquery.com/serializeArray/) function.
 * **serializeObject**  
-  Serializes a set of form elements as an Object of names and values using Ben Alman's [.serializeObject()](http://benalman.com/projects/jquery-misc-plugins/#serializeobject) function.
+  Serializes a set of form elements as an Object of names and values using Ben Alman"s [.serializeObject()](http://benalman.com/projects/jquery-misc-plugins/#serializeobject) function.
 
 #### Arguments
 
@@ -257,15 +257,15 @@ Data methods should **return some kind of dataset**, most likely containing the 
 ### Conditions
 
     $("form").autosave({
-	    callbacks: {
-			condition: function(options, $inputs, formData, caller) {
-				// ...
+        callbacks: {
+            condition: function(options, $inputs, formData, caller) {
+                // ...
                 // Should return a boolean value.
-				// Returning boolean 'false' will cancel the save.
-	            return false;
-			}
-		}
-	});
+                // Returning boolean "false" will cancel the save.
+                return false;
+            }
+        }
+    });
 
 #### Methods
 
@@ -300,16 +300,16 @@ Condition methods should **return a Boolean value (true or false)**. Returning a
 ### Save
 
     $("form").autosave({
-	    callbacks: {
-			save: function(options, formData) {
-				// ...
-				// If your save function contains asynchronous code,
-				// you should return a Boolean 'false' here and call
-				// this.next("save") when your method has finished.
-	            return false;
-			}
-		}
-	});
+        callbacks: {
+            save: function(options, formData) {
+                // ...
+                // If your save function contains asynchronous code,
+                // you should return a Boolean "false" here and call
+                // this.next("save") when your method has finished.
+                return false;
+            }
+        }
+    });
 
 #### Methods
 
@@ -333,13 +333,13 @@ Saving methods do not require a return value. However, **if your callback method
 
 ## Events
 
-For convenience, the plugin automatically binds or fires events on certain elements under certain circumstances. These events are listed below. Some of these events need to be triggered using jQuery's [.triggerHandler()](http://api.jquery.com/triggerHandler/) function on the element the event is bound to. Other events will be fired automatically and may be caught and handled using jQuery's [.bind()](http://api.jquery.com/bind/) function on the element firing the event. The jQuery [Event Object](http://api.jquery.com/category/events/event-object/) will **always** be the first argument passed to handler methods. Also, keep in mind that these events will be [namespaced](http://docs.jquery.com/Namespaced_Events) according to the _namespace_ option above ("autosave" by default).
+For convenience, the plugin automatically binds or fires events on certain elements under certain circumstances. These events are listed below. Some of these events need to be triggered using jQuery"s [.triggerHandler()](http://api.jquery.com/triggerHandler/) function on the element the event is bound to. Other events will be fired automatically and may be caught and handled using jQuery"s [.bind()](http://api.jquery.com/bind/) function on the element firing the event. The jQuery [Event Object](http://api.jquery.com/category/events/event-object/) will **always** be the first argument passed to handler methods. Also, keep in mind that these events will be [namespaced](http://docs.jquery.com/Namespaced_Events) according to the _namespace_ option above ("autosave" by default).
 
 ### Save
 
     $("form").autosave().bind("save", function(event, $inputs) {
-	    // ...
-	}).triggerHandler("save");
+        // ...
+    }).triggerHandler("save");
 
 When triggered, this event will attempt to save form data.
 
@@ -357,8 +357,8 @@ This event is bound to each form autosave is attached to.
 ### Saved
 
     $("form").autosave().bind("saved", function(event) {
-	    // ...
-	});
+        // ...
+    });
 
 Triggered whenever autosave finishes saving form data.
 
@@ -376,8 +376,8 @@ This event is fired for each form autosave is attached to.
 ### Changed
 
     $("form").autosave().bind("changed", function(event, input) {
-	    // ...
-	});
+        // ...
+    });
 
 Triggered whenever an input value changes ("change" event is fired).
 
@@ -397,8 +397,8 @@ This event is fired on the form containing the input.
 ### Modified
 
     $("form").autosave().bind("modified", function(event, input) {
-	    // ...
-	});
+        // ...
+    });
 
 Triggered whenever an input value is modified ("keyup" event is fired).
 
@@ -430,6 +430,10 @@ Verified to work correctly on:
 * Firefox 3.0+
 * Internet Explorer 6.0+
 
+## How to build your own
+
+jQuery.autosave uses [Grunt](https://github.com/gruntjs/grunt) to build its distribution files. See the gruntfile for more information.
+
 ## Credits
 
 Written by [Kyle Florence](https://github.com/kflorence/).  
@@ -437,6 +441,6 @@ Inspired by the jQuery.autosave plugin written by [Raymond Julin](https://github
 
 ## License
 
-Copyright (C) 2012  
+Copyright (C) 2013  
 Kyle Florence, Raymond Julin, Mads Erik Forberg and Simen Graaten.  
 jQuery.autosave is dual licensed under the BSD and MIT licenses.
