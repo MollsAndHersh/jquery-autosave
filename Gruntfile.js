@@ -48,7 +48,7 @@ module.exports = function( grunt ) {
             },
             grunt: {
                 src: [
-                    "gruntfile.js"
+                    "Gruntfile.js"
                 ]
             }
         },
@@ -67,13 +67,9 @@ module.exports = function( grunt ) {
         watch: {
             scripts: {
                 files: [
-                    "gruntfile.js",
+                    "Gruntfile.js",
                     "src/**/*.js"
                 ],
-                options: {
-                    interval: 100,
-                    forceWatchMethod: 'old'
-                },
                 tasks: [
                     "default"
                 ]
