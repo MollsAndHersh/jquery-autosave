@@ -14,6 +14,7 @@ module.exports = function( grunt ) {
                     "src/intro.js",
                     "src/utility.js",
                     "src/handler.js",
+                    "src/sequence.js",
                     "src/autosave.js",
                     "src/jquery-bridge.js",
                     "src/outro.js"
@@ -29,7 +30,6 @@ module.exports = function( grunt ) {
                 latedef: true,
                 maxlen: 120,
                 newcap: true,
-                quotmark: true,
                 trailing: true,
                 undef: true,
                 unused: true
@@ -38,9 +38,9 @@ module.exports = function( grunt ) {
                 options: {
                     browser: true,
                     globals: {
+                        console: true,
                         jQuery: true
-                    },
-                    loopfunc: true
+                    }
                 },
                 src: [
                     "<%= concat.basic.dest %>"
@@ -62,6 +62,21 @@ module.exports = function( grunt ) {
                     "<%= concat.basic.dest %>"
                 ],
                 dest: "dist/<%= pkg.name %>.min.js"
+            }
+        },
+        watch: {
+            scripts: {
+                files: [
+                    "gruntfile.js",
+                    "src/**/*.js"
+                ],
+                options: {
+                    interval: 100,
+                    forceWatchMethod: 'old'
+                },
+                tasks: [
+                    "default"
+                ]
             }
         }
     });

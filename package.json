@@ -1,41 +1,39 @@
 {
-    "name": "jquery.autosave",
-    "version": "2.0.0-rc1",
-    "title": "jQuery Autosave",
-    "author": {
-        "name": "Kyle Florence",
-        "url": "https://github.com/kflorence/"
+  "name": "jquery.autosave",
+  "version": "2.0.0-rc1",
+  "title": "jQuery Autosave",
+  "author": {
+    "name": "Kyle Florence",
+    "url": "https://github.com/kflorence/"
+  },
+  "licenses": [
+    {
+      "type": "BSD",
+      "url": "https://raw.github.com/kflorence/jquery-autosave/master/license-bsd"
     },
-    "licenses": [
-        {
-          "type": "BSD",
-          "url": "https://raw.github.com/kflorence/jquery-autosave/master/license-bsd"
-        },
-        {
-          "type": "MIT",
-          "url": "https://raw.github.com/kflorence/jquery-autosave/master/license-mit"
-        }
-    ],
-    "dependencies": {
-        "jquery": ">=1.7.0"
-    },
-    "description": "Periodically saves form data based on a set of critera.",
-    "keywords": [
-        "form",
-        "autosave",
-        "data",
-        "trigger",
-        "scope",
-        "conditions",
-        "save"
-    ],
-    "demo": "http://kflorence.github.com/jquery-autosave/",
-    "homepage": "https://github.com/kflorence/jquery-autosave",
-    "devDependencies": {
-        "grunt": "~0.4.0rc2",
-        "grunt-contrib-concat": "~0.1.1",
-        "grunt-contrib-jshint": "~0.1.0",
-        "grunt-contrib-uglify": "~0.1.0",
-        "grunt-contrib-watch": "~0.1.4"
+    {
+      "type": "MIT",
+      "url": "https://raw.github.com/kflorence/jquery-autosave/master/license-mit"
     }
+  ],
+  "dependencies": {},
+  "description": "Periodically saves form data based on a set of critera.",
+  "keywords": [
+    "form",
+    "autosave",
+    "data",
+    "trigger",
+    "scope",
+    "conditions",
+    "save"
+  ],
+  "demo": "http://kflorence.github.com/jquery-autosave/",
+  "homepage": "https://github.com/kflorence/jquery-autosave",
+  "devDependencies": {
+    "grunt": "~0.4.0rc3",
+    "grunt-contrib-concat": "~0.1.1",
+    "grunt-contrib-jshint": "~0.1.0",
+    "grunt-contrib-uglify": "~0.1.0",
+    "grunt-contrib-watch": "~0.2.0a"
+  }
 }

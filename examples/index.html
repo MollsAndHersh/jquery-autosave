@@ -4,19 +4,17 @@
 
   <link type="text/css" rel="stylesheet" href="styles.css" />
 
-  <script type="text/javascript" src="../external/jquery/jquery-1.7.js"></script>
-
-  <!-- TODO: link to compiled source when build script is in place. -->
-  <script type="text/javascript" src="../src/autosave.js"></script>
+  <script type="text/javascript" src="../libs/jquery/jquery-1.8.3.js"></script>
+  <script type="text/javascript" src="../dist/jquery.autosave.js"></script>
 
   <script type="text/javascript">
     jQuery(function( $ ) {
         var example = $("#example1");
-        
+/*
         example.autosave({
             handler: function( event, options, inputs, data ) {
                 console.log('handler called');
-				return inputs.serialize();
+                return inputs.serialize();
             },
             ready: function() {
                 console.log('ready');
@@ -26,6 +24,7 @@
         example.data( "autosave" ).save().done(function() {
             console.log('done called with arguments:', arguments);
         });
+*/
     });
   </script>
   </head>
