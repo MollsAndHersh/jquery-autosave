@@ -6,24 +6,6 @@ function error( message ) {
     throw new Error( "( " + namespace + " ) " + message );
 }
 
-function join( obj, separator ) {
-    var k,
-        items = [];
-
-    if ( typeof obj.join === "function" ) {
-        items = obj;
-
-    } else {
-        for ( k in obj ) {
-            if ( obj.hasOwnProperty( k ) ) {
-                items.push( obj[ k ] );
-            }
-        }
-    }
-
-    return items.join( separator );
-}
-
 function namespacer( namespace, items, separator, before ) {
     var i, item,
         length = items.length,

@@ -1,11 +1,11 @@
 var classNames = namespacer( namespace, [ "change" ], "-", true ),
-    eventNames = namespacer( namespace, [ "change", "keyup" ] ),
-    inputEvents = join( eventNames, " " );
+    eventNames = namespacer( namespace, [ "change", "keyup" ] );
 
 function Autosave( element, options ) {
     var form;
 
-    element = $( element );
+    this.element = element = $( element );
+    this.options = options;
 
     // Try to find the form associated the given element
     if ( element.is( "form" ) ) {
@@ -15,9 +15,11 @@ function Autosave( element, options ) {
         form = element.closest( "form" );
     }
 
+    this.form = form;
+
     // Listen for changes on inputs
     // FIXME: https://github.com/nervetattoo/jquery-autosave/issues/18
-    element.on( inputEvents, ":input", function( event ) {
+    element.on( eventNames.change + " " + eventNames.keyup, ":input", function( event ) {
         var target = $( event.target );
 
         if ( !target.hasClass( options.ignore ) ) {
@@ -26,40 +28,29 @@ function Autosave( element, options ) {
         }
     });
 
-    this.element = element;
-    this.form = form;
-    this.options = options;
-
     this.addHandler( options.handler || options.handlers ).done( options.ready );
 }
 
-// Public Instance
 $.extend( Autosave.prototype, {
-    addHandler: function( handler ) {
-        var i, length,
+/*
+    addHandler: function( handlers ) {
+        var handler, i, length,
             chain = new $.Deferred(),
-            handlers = Handler.resolveHandler( handler ),
-            promise = chain,
-            self = this;
+            promise = chain;
+
+        handlers = Handler.resolveHandler( handlers );
 
         for ( i = 0, length = handlers.length; i < length; i++ ) {
             handler = handlers[ i ];
-
-            promise = promise.pipe(function() {
-                return handler.setup( handler.options );
-
-            }).done(function() {
-                self.handlers[ handler.uuid ] = handler;
-            });
+            promise = promise.pipe( pipe( handler ) );
+            promise.done( done.call( this, handler ) );
         }
 
         chain.resolve();
 
         return promise;
     },
-
-    constructor: Autosave,
-
+*/
     destroy: function() {
         this.interval();
 
@@ -88,12 +79,11 @@ $.extend( Autosave.prototype, {
 
     removeHandler: function() {
         // TODO
-    },
+    }/*,
 
     save: function( event, inputs ) {
         var handler,
             chain = new $.Deferred(),
-            data = {},
             deferred = new $.Deferred(),
             promise = chain;
 
@@ -103,30 +93,26 @@ $.extend( Autosave.prototype, {
             event = undefined;
         }
 
-        inputs = inputs ? $( inputs ).filter( ":input" ) : this.inputs();
-
         for ( handler in this.handlers ) {
-            handler = this.handlers[ handler ];
-
-            promise = promise.pipe(function( data ) {
-                return handler.run( event, handler.options, inputs, data ) || data;
-
-            // If any promise fails, reject deferred
-            }).fail(function( data ) {
-                deferred.reject( data );
-            });
+            if ( this.handlers.hasOwnProperty( handler ) ) {
+                handler = this.handlers[ handler ];
+                promise = promise.pipe( pipe( handler ) );
+                promise.fail( fail( deferred ) );
+            }
         }
 
         // Resolve deferred when the last promise is done
-        promise.done(function( data ) {
-            deferred.resolve( data );
-        });
+        promise.done( done( deferred ) );
 
         // Start the chain
-        chain.resolve( data );
+        chain.resolve({
+            data: {},
+            event: event,
+            inputs: inputs ? $( inputs ).filter( ":input" ) : this.inputs()
+        });
 
         return deferred.promise();
-    }
+    }*/
 });
 
 // Public Static
