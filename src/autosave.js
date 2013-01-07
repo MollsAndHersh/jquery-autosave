@@ -32,25 +32,21 @@ function Autosave( element, options ) {
 }
 
 $.extend( Autosave.prototype, {
-/*
-    addHandler: function( handlers ) {
-        var handler, i, length,
-            chain = new $.Deferred(),
-            promise = chain;
+    addHandler: (function() {
+        function each( current, handler ) {
+            current.done(function() {
+                this.handlers[ handler.uuid ] = handler;
+            });
 
-        handlers = Handler.resolveHandler( handlers );
-
-        for ( i = 0, length = handlers.length; i < length; i++ ) {
-            handler = handlers[ i ];
-            promise = promise.pipe( pipe( handler ) );
-            promise.done( done.call( this, handler ) );
+            return handler.setup( handler.options );
         }
 
-        chain.resolve();
+        return function( handler ) {
+            var handlers = Handler.resolveHandler( handler );
+            return $.Deferred.Sequence( handlers , each ).start( [], this );
+        };
+    })(),
 
-        return promise;
-    },
-*/
     destroy: function() {
         this.interval();
 
@@ -79,40 +75,28 @@ $.extend( Autosave.prototype, {
 
     removeHandler: function() {
         // TODO
-    }/*,
+    },
 
-    save: function( event, inputs ) {
-        var handler,
-            chain = new $.Deferred(),
-            deferred = new $.Deferred(),
-            promise = chain;
-
-        // args: inputs
-        if ( !( event instanceof $.Event ) ) {
-            inputs = event;
-            event = undefined;
+    save: (function() {
+        function each( current, handler, args ) {
+            return handler.run.apply( handler, args );
         }
 
-        for ( handler in this.handlers ) {
-            if ( this.handlers.hasOwnProperty( handler ) ) {
-                handler = this.handlers[ handler ];
-                promise = promise.pipe( pipe( handler ) );
-                promise.fail( fail( deferred ) );
+        return function( event, inputs ) {
+
+            // Args: inputs
+            if ( !( event instanceof $.Event ) ) {
+                inputs = event;
+                event = undefined;
             }
-        }
 
-        // Resolve deferred when the last promise is done
-        promise.done( done( deferred ) );
-
-        // Start the chain
-        chain.resolve({
-            data: {},
-            event: event,
-            inputs: inputs ? $( inputs ).filter( ":input" ) : this.inputs()
-        });
-
-        return deferred.promise();
-    }*/
+            return $.Deferred.Sequence( this.handlers, each ).start([
+                {},
+                event,
+                inputs ? $( inputs ).filter( ":input" ) : this.inputs()
+            ]);
+        };
+    })()
 });
 
 // Public Static

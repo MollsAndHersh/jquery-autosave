@@ -10,21 +10,27 @@
   <script type="text/javascript">
     jQuery(function( $ ) {
         var example = $("#example1");
-/*
+
         example.autosave({
             handler: function( event, options, inputs, data ) {
-                console.log('handler called');
-                return inputs.serialize();
+                var dfd = $.Deferred();
+
+                setTimeout(function() {
+                  dfd.resolve( inputs.serialize() );
+                }, 1000);
+
+                return dfd;
             },
             ready: function() {
                 console.log('ready');
             }
         }).find("[type=text]").val("text");
 
-        example.data( "autosave" ).save().done(function() {
-            console.log('done called with arguments:', arguments);
+        example.data( "autosave" ).save().done(function( args ) {
+            console.log('inputs serialized:', args[ 0 ]);
+        }).fail(function() {
+            console.log('failed');
         });
-*/
     });
   </script>
   </head>
