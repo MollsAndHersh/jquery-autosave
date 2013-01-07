@@ -1,5 +1,5 @@
 /*!
-jquery.autosave - v2.0.0-rc1 - 2013-01-05
+jquery.autosave - v2.0.0-rc1 - 2013-01-06
 https://github.com/kflorence/jquery-autosave
 Periodically saves form data based on a set of critera.
 
@@ -116,64 +116,39 @@ $.extend( Handler, {
 
 var aps = Array.prototype.slice;
 
-function scopedFunc() {
-    var args = aps.call( arguments, 0 ),
-        func = args.shift();
+function scopedFunc( func /* , arg, ..., argN */ ) {
+    var args = aps.call( arguments, 1 );
 
     return function() {
-        return func.apply( this, args.concat( arguments ) );
+        return $.when( func.apply( this, args.concat( arguments ) ) );
     };
 }
 
-function Sequence( settings, process ) {
-    return process === true ? this.process( settings ) : this.update( settings );
+function Sequence( items, each ) {
+    var head = $.Deferred(),
+        master = $.Deferred(),
+        tail = head;
+
+    $.each( items, function( i, item ) {
+        tail = tail.pipe( scopedFunc( each, tail, item ) );
+        tail.fail( scopedFunc( master.reject ) );
+    });
+
+    tail.done( scopedFunc( master.resolve ) );
+
+    return {
+        head: head,
+        master: master,
+        start: function( args, context ) {
+            head.resolveWith( context || this, arr( args ) );
+            return master;
+        },
+        tail: tail
+    };
 }
 
-Sequence.prototype = {
-    constructor: Sequence,
-
-    process: function( settings ) {
-        this.update( settings );
-
-        this.head = new $.Deferred();
-        this.deferred = new $.Deferred();
-        this.tail = this.head;
-
-        $.each( this.settings.items, $.proxy( function( i, item ) {
-            this.tail = this.tail.then( scopedFunc( this.settings.each, this.tail, item ) );
-        }, this ) );
-
-        this.tail.done( scopedFunc( this.deferred.resolve ) );
-        this.head.resolve( this.settings.data );
-
-        return this.deferred.promise();
-    },
-
-    update: function( settings ) {
-        if ( settings ) {
-            this.settings = $.extend( true, {}, Sequence.settings, settings );
-        }
-
-        return this;
-    }
-};
-
-Sequence.settings = {
-    data: {},
-    each: function( dfd, item, data ) {
-        return data;
-    },
-    items: []
-};
-
-// Setters
-$.each( Sequence.settings, function( key ) {
-    Sequence.prototype[ key ] = function( value ) {
-        this.settings[ key ] = value;
-
-        return this;
-    };
-});
+// Export
+$.Deferred.Sequence = Sequence;
 
 var classNames = namespacer( namespace, [ "change" ], "-", true ),
     eventNames = namespacer( namespace, [ "change", "keyup" ] );
@@ -209,25 +184,21 @@ function Autosave( element, options ) {
 }
 
 $.extend( Autosave.prototype, {
-/*
-    addHandler: function( handlers ) {
-        var handler, i, length,
-            chain = new $.Deferred(),
-            promise = chain;
+    addHandler: (function() {
+        function each( current, handler ) {
+            current.done(function() {
+                this.handlers[ handler.uuid ] = handler;
+            });
 
-        handlers = Handler.resolveHandler( handlers );
-
-        for ( i = 0, length = handlers.length; i < length; i++ ) {
-            handler = handlers[ i ];
-            promise = promise.pipe( pipe( handler ) );
-            promise.done( done.call( this, handler ) );
+            return handler.setup( handler.options );
         }
 
-        chain.resolve();
+        return function( handler ) {
+            var handlers = Handler.resolveHandler( handler );
+            return $.Deferred.Sequence( handlers , each ).start( [], this );
+        };
+    })(),
 
-        return promise;
-    },
-*/
     destroy: function() {
         this.interval();
 
@@ -256,40 +227,28 @@ $.extend( Autosave.prototype, {
 
     removeHandler: function() {
         // TODO
-    }/*,
+    },
 
-    save: function( event, inputs ) {
-        var handler,
-            chain = new $.Deferred(),
-            deferred = new $.Deferred(),
-            promise = chain;
-
-        // args: inputs
-        if ( !( event instanceof $.Event ) ) {
-            inputs = event;
-            event = undefined;
+    save: (function() {
+        function each( current, handler, args ) {
+            return handler.run.apply( handler, args );
         }
 
-        for ( handler in this.handlers ) {
-            if ( this.handlers.hasOwnProperty( handler ) ) {
-                handler = this.handlers[ handler ];
-                promise = promise.pipe( pipe( handler ) );
-                promise.fail( fail( deferred ) );
+        return function( event, inputs ) {
+
+            // Args: inputs
+            if ( !( event instanceof $.Event ) ) {
+                inputs = event;
+                event = undefined;
             }
-        }
 
-        // Resolve deferred when the last promise is done
-        promise.done( done( deferred ) );
-
-        // Start the chain
-        chain.resolve({
-            data: {},
-            event: event,
-            inputs: inputs ? $( inputs ).filter( ":input" ) : this.inputs()
-        });
-
-        return deferred.promise();
-    }*/
+            return $.Deferred.Sequence( this.handlers, each ).start([
+                {},
+                event,
+                inputs ? $( inputs ).filter( ":input" ) : this.inputs()
+            ]);
+        };
+    })()
 });
 
 // Public Static
