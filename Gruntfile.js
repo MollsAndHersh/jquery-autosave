@@ -52,6 +52,13 @@ module.exports = function( grunt ) {
                 ]
             }
         },
+        qunit: {
+            all: {
+                files: [
+                    { src: "test/**/*.html" }
+                ]
+            }
+        },
         uglify: {
             options: {
                 mangle: false,
@@ -80,13 +87,15 @@ module.exports = function( grunt ) {
     // Load plugins from npm
     grunt.task.loadNpmTasks( "grunt-contrib-concat" );
     grunt.task.loadNpmTasks( "grunt-contrib-jshint" );
+    grunt.task.loadNpmTasks( "grunt-contrib-qunit" );
     grunt.task.loadNpmTasks( "grunt-contrib-uglify" );
     grunt.task.loadNpmTasks( "grunt-contrib-watch" );
 
     // Dev build
     grunt.task.registerTask( "default", [
         "concat",
-        "jshint"
+        "jshint",
+        "qunit"
     ]);
 
     // Full build

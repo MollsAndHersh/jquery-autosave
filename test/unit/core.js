@@ -1,12 +1,12 @@
-module("Core");
+module( "Core" );
 
-test("Requirements", function() {
-  expect(2);
+test( "Requirements", function() {
+    expect( 2 );
 
-  ok(jQuery, "jQuery exists");
-  ok($, "$ exists");
+    ok( jQuery, "jQuery exists" );
+    ok( $, "$ exists" );
 });
-
+/*
 test("Constructor", function() {
   expect(21);
 
@@ -78,3 +78,4 @@ test("Select list value", function() {
 
   $form.find("select[name=select]").val("1").change();
 });
+*/
