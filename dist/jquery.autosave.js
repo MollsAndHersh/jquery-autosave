@@ -1,5 +1,5 @@
 /*!
-jquery.autosave - v2.0.0-rc1 - 2013-01-06
+jquery.autosave - v2.0.0-rc1 - 2013-01-19
 https://github.com/kflorence/jquery-autosave
 Periodically saves form data based on a set of critera.
 
@@ -114,38 +114,49 @@ $.extend( Handler, {
     }
 });
 
-var aps = Array.prototype.slice;
+var Sequence = (function() {
+    var slice = [].slice;
 
-function scopedFunc( func /* , arg, ..., argN */ ) {
-    var args = aps.call( arguments, 1 );
+    function scopedFunc( func /* arg, ... , argsN */ ) {
+        var args = slice.call( arguments, 1 );
 
-    return function() {
-        return $.when( func.apply( this, args.concat( arguments ) ) );
+        return function() {
+            return func.apply( this, args.concat( slice.call( arguments ) ) );
+        };
+    }
+
+    return function( items ) {
+        var head = $.Deferred(),
+            master = $.Deferred(),
+            tail = head;
+
+        return {
+            head: head,
+            items: items,
+            master: master,
+            reduce: function( value, func, context ) {
+
+                // Args: func, context
+                if ( typeof value === 'function' ) {
+                    context = func;
+                    func = value;
+                    value = undefined;
+                }
+
+                head.resolveWith( context, arr( value ) );
+
+                $.each( items, function( i, item ) {
+                    tail = tail.pipe( scopedFunc( func, item ) );
+                });
+
+                tail.done( scopedFunc( master.resolve ) );
+
+                return master;
+            },
+            tail: tail
+        };
     };
-}
-
-function Sequence( items, each ) {
-    var head = $.Deferred(),
-        master = $.Deferred(),
-        tail = head;
-
-    $.each( items, function( i, item ) {
-        tail = tail.pipe( scopedFunc( each, tail, item ) );
-        tail.fail( scopedFunc( master.reject ) );
-    });
-
-    tail.done( scopedFunc( master.resolve ) );
-
-    return {
-        head: head,
-        master: master,
-        start: function( args, context ) {
-            head.resolveWith( context || this, arr( args ) );
-            return master;
-        },
-        tail: tail
-    };
-}
+})();
 
 // Export
 $.Deferred.Sequence = Sequence;
@@ -184,20 +195,16 @@ function Autosave( element, options ) {
 }
 
 $.extend( Autosave.prototype, {
-    addHandler: (function() {
-        function each( current, handler ) {
-            current.done(function() {
-                this.handlers[ handler.uuid ] = handler;
+    addHandler: function( handler ) {
+        var handlers = this.handlers,
+            sequence = new Sequence( Handler.resolveHandler( handler ) );
+
+        return sequence.reduce(function( handler ) {
+            return $.when( handler.setup() ).done(function() {
+                handlers[ handler.uuid ] = handler;
             });
-
-            return handler.setup( handler.options );
-        }
-
-        return function( handler ) {
-            var handlers = Handler.resolveHandler( handler );
-            return $.Deferred.Sequence( handlers , each ).start( [], this );
-        };
-    })(),
+        });
+    },
 
     destroy: function() {
         this.interval();
@@ -229,26 +236,30 @@ $.extend( Autosave.prototype, {
         // TODO
     },
 
-    save: (function() {
-        function each( current, handler, args ) {
-            return handler.run.apply( handler, args );
+    save: function( event, inputs, data ) {
+        var sequence = new Sequence( this.handlers );
+
+        // Args: inputs, data
+        if ( !( event instanceof $.Event ) ) {
+            data = inputs;
+            inputs = event;
+            event = undefined;
         }
 
-        return function( event, inputs ) {
+        return sequence.reduce({
+            data: data,
+            event: event,
+            inputs: inputs ? $( inputs ).filter( ":input" ) : this.inputs()
+        }, function( handler, data ) {
+            var dfd = $.Deferred();
 
-            // Args: inputs
-            if ( !( event instanceof $.Event ) ) {
-                inputs = event;
-                event = undefined;
-            }
+            $.when( handler.run( data ) ).done(function( response ) {
+                dfd.resolve( response !== undefined ? response : data );
+            }).fail( sequence.master.reject );
 
-            return $.Deferred.Sequence( this.handlers, each ).start([
-                {},
-                event,
-                inputs ? $( inputs ).filter( ":input" ) : this.inputs()
-            ]);
-        };
-    })()
+            return dfd;
+        });
+    }
 });
 
 // Public Static

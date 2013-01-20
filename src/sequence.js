@@ -1,35 +1,46 @@
-var aps = Array.prototype.slice;
+var Sequence = (function() {
+    var slice = [].slice;
 
-function scopedFunc( func /* , arg, ..., argN */ ) {
-    var args = aps.call( arguments, 1 );
+    function scopedFunc( func /* arg, ... , argsN */ ) {
+        var args = slice.call( arguments, 1 );
 
-    return function() {
-        return $.when( func.apply( this, args.concat( arguments ) ) );
+        return function() {
+            return func.apply( this, args.concat( slice.call( arguments ) ) );
+        };
+    }
+
+    return function( items ) {
+        var head = $.Deferred(),
+            master = $.Deferred(),
+            tail = head;
+
+        return {
+            head: head,
+            items: items,
+            master: master,
+            reduce: function( value, func, context ) {
+
+                // Args: func, context
+                if ( typeof value === 'function' ) {
+                    context = func;
+                    func = value;
+                    value = undefined;
+                }
+
+                head.resolveWith( context, arr( value ) );
+
+                $.each( items, function( i, item ) {
+                    tail = tail.pipe( scopedFunc( func, item ) );
+                });
+
+                tail.done( scopedFunc( master.resolve ) );
+
+                return master;
+            },
+            tail: tail
+        };
     };
-}
-
-function Sequence( items, each ) {
-    var head = $.Deferred(),
-        master = $.Deferred(),
-        tail = head;
-
-    $.each( items, function( i, item ) {
-        tail = tail.pipe( scopedFunc( each, tail, item ) );
-        tail.fail( scopedFunc( master.reject ) );
-    });
-
-    tail.done( scopedFunc( master.resolve ) );
-
-    return {
-        head: head,
-        master: master,
-        start: function( args, context ) {
-            head.resolveWith( context || this, arr( args ) );
-            return master;
-        },
-        tail: tail
-    };
-}
+})();
 
 // Export
 $.Deferred.Sequence = Sequence;

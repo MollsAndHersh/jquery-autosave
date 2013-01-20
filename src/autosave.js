@@ -32,20 +32,16 @@ function Autosave( element, options ) {
 }
 
 $.extend( Autosave.prototype, {
-    addHandler: (function() {
-        function each( current, handler ) {
-            current.done(function() {
-                this.handlers[ handler.uuid ] = handler;
+    addHandler: function( handler ) {
+        var handlers = this.handlers,
+            sequence = new Sequence( Handler.resolveHandler( handler ) );
+
+        return sequence.reduce(function( handler ) {
+            return $.when( handler.setup() ).done(function() {
+                handlers[ handler.uuid ] = handler;
             });
-
-            return handler.setup( handler.options );
-        }
-
-        return function( handler ) {
-            var handlers = Handler.resolveHandler( handler );
-            return $.Deferred.Sequence( handlers , each ).start( [], this );
-        };
-    })(),
+        });
+    },
 
     destroy: function() {
         this.interval();
@@ -77,26 +73,30 @@ $.extend( Autosave.prototype, {
         // TODO
     },
 
-    save: (function() {
-        function each( current, handler, args ) {
-            return handler.run.apply( handler, args );
+    save: function( event, inputs, data ) {
+        var sequence = new Sequence( this.handlers );
+
+        // Args: inputs, data
+        if ( !( event instanceof $.Event ) ) {
+            data = inputs;
+            inputs = event;
+            event = undefined;
         }
 
-        return function( event, inputs ) {
+        return sequence.reduce({
+            data: data,
+            event: event,
+            inputs: inputs ? $( inputs ).filter( ":input" ) : this.inputs()
+        }, function( handler, data ) {
+            var dfd = $.Deferred();
 
-            // Args: inputs
-            if ( !( event instanceof $.Event ) ) {
-                inputs = event;
-                event = undefined;
-            }
+            $.when( handler.run( data ) ).done(function( response ) {
+                dfd.resolve( response !== undefined ? response : data );
+            }).fail( sequence.master.reject );
 
-            return $.Deferred.Sequence( this.handlers, each ).start([
-                {},
-                event,
-                inputs ? $( inputs ).filter( ":input" ) : this.inputs()
-            ]);
-        };
-    })()
+            return dfd;
+        });
+    }
 });
 
 // Public Static

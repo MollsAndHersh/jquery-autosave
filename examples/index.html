@@ -12,24 +12,32 @@
         var example = $("#example1");
 
         example.autosave({
-            handler: function( event, options, inputs, data ) {
-                var dfd = $.Deferred();
+            handlers: [
+                // Reduce inputs to type=text
+                function( state ) {
+                    state.inputs = state.inputs.filter( ":text" );
+                },
+                // Serialize inputs
+                function( state ) {
+                    var dfd = $.Deferred();
 
-                setTimeout(function() {
-                  dfd.resolve( inputs.serialize() );
-                }, 1000);
+                    setTimeout(function() {
+                        state.data = state.inputs.serialize();
+                        dfd.resolve(state);
+                    }, 1000);
 
-                return dfd;
-            },
+                    return dfd;
+                }
+            ],
             ready: function() {
                 console.log('ready');
             }
         }).find("[type=text]").val("text");
 
-        example.data( "autosave" ).save().done(function( args ) {
-            console.log('inputs serialized:', args[ 0 ]);
-        }).fail(function() {
-            console.log('failed');
+        example.data( "autosave" ).save().done(function( response ) {
+            console.log('done:', response );
+        }).fail(function( message ) {
+            console.log('failed: ' + message);
         });
     });
   </script>
