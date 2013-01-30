@@ -108,7 +108,7 @@ $.extend( Autosave, {
 
     options: {
         handler: null,
-        ignore: ":hidden",
+        ignore: ":disabled",
 
         // Callbacks
         change: $.noop,
@@ -118,3 +118,6 @@ $.extend( Autosave, {
 
     version: "<%= pkg.version %>"
 });
+
+// Exports
+$.Autosave = Autosave;

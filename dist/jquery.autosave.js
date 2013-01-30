@@ -271,7 +271,7 @@ $.extend( Autosave, {
 
     options: {
         handler: null,
-        ignore: ":hidden",
+        ignore: ":disabled",
 
         // Callbacks
         change: $.noop,
@@ -281,6 +281,9 @@ $.extend( Autosave, {
 
     version: "2.0.0-rc1"
 });
+
+// Exports
+$.Autosave = Autosave;
 
 $.fn[ namespace ] = function( options ) {
     options = $.extend( true, {}, Autosave.options, options );
