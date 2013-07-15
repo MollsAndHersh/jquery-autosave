@@ -1,4 +1,4 @@
-/*global module:false*/
+/* global module:false */
 module.exports = function( grunt ) {
     "use strict";
 
@@ -24,9 +24,12 @@ module.exports = function( grunt ) {
         },
         jshint: {
             options: {
+                browser: true,
                 camelcase: true,
                 curly: true,
+                devel: true,
                 eqeqeq: true,
+                jquery: true,
                 latedef: true,
                 maxlen: 120,
                 newcap: true,
@@ -35,28 +38,38 @@ module.exports = function( grunt ) {
                 unused: true
             },
             basic: {
-                options: {
-                    browser: true,
-                    globals: {
-                        console: true,
-                        jQuery: true
-                    }
-                },
-                src: [
-                    "<%= concat.basic.dest %>"
-                ]
+                src: "<%= concat.basic.dest %>"
             },
             grunt: {
-                src: [
-                    "Gruntfile.js"
-                ]
+                src: "Gruntfile.js"
+            },
+            test: {
+                options: {
+                    globals: {
+                        asyncTest: false,
+                        deepEqual: false,
+                        equal: false,
+                        expect: false,
+                        module: false,
+                        notDeepEqual: false,
+                        notEqual: false,
+                        notStrictEqual: false,
+                        ok: false,
+                        QUnit: false,
+                        raises: false,
+                        start: false,
+                        stop: false,
+                        strictEqual: false,
+                        test: false,
+                        throws: false
+                    }
+                },
+                src: "test/unit/*.js"
             }
         },
         qunit: {
             all: {
-                files: [
-                    { src: "test/**/*.html" }
-                ]
+                src: "test/**/*.html"
             }
         },
         uglify: {
@@ -65,20 +78,25 @@ module.exports = function( grunt ) {
                 preserveComments: "some"
             },
             basic: {
-                src: [
-                    "<%= concat.basic.dest %>"
-                ],
+                src: "<%= concat.basic.dest %>",
                 dest: "dist/<%= pkg.name %>.min.js"
             }
         },
         watch: {
-            scripts: {
+            src: {
                 files: [
                     "Gruntfile.js",
                     "src/**/*.js"
                 ],
                 tasks: [
                     "default"
+                ]
+            },
+            test: {
+                files: "<%= jshint.test.src %>",
+                tasks: [
+                    "jshint",
+                    "qunit"
                 ]
             }
         }
