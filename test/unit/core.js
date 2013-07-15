@@ -1,22 +1,28 @@
 (function( $, undefined ) {
-  module( "Core" );
+    module( "Core" );
 
-  test( "Requirements", function() {
-      expect( 4 );
+    test( "Requirements", function() {
+        expect( 4 );
 
-      ok( jQuery, "jQuery exists" );
-      ok( $, "$ exists" );
-      ok( $.Autosave, "$.Autosave exists" );
-      ok( $.fn.autosave, "$.fn.Autosave exists" );
-  });
+        ok( jQuery, "jQuery exists" );
+        ok( $, "$ exists" );
+        ok( $.Autosave, "$.Autosave exists" );
+        ok( $.fn.autosave, "$.fn.Autosave exists" );
+    });
 
-  test( "Initialization", function() {
-      var $autosave = $( "#qunit-fixture" ).autosave(),
-          autosave = $autosave.data( "autosave" );
+    test( "Initialization / Destruction", function() {
+        expect( 4 );
 
-      ok( autosave, "Autosave instance stored in element." );
-      equal( autosave.form.length, 1, "Element contains one form." );
-      equal( autosave.inputs().length, 12, "Element contains 12 inputs." );
-  });
+        var fixture = $( '#qunit-fixture' ).autosave(),
+            autosave = fixture.data( 'autosave' );
+
+        ok( autosave instanceof jQuery.Autosave, "Autosave instance stored in element." );
+        equal( autosave.form.length, 1, "Element contains one form." );
+        equal( autosave.inputs().length, 11, "Element contains 11 inputs (one is ignored)." );
+
+        autosave.destroy();
+
+        equal( fixture.data( 'autosave' ), undefined, "Autosave instance has been destroyed." );
+    });
 
 })( jQuery );

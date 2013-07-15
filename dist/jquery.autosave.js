@@ -1,5 +1,5 @@
 /*!
-jquery.autosave - v2.0.0-rc1 - 2013-01-20
+jquery.autosave - v2.0.0-rc1 - 2013-07-14
 https://github.com/kflorence/jquery-autosave
 Periodically saves form data based on a set of critera.
 
@@ -113,7 +113,6 @@ $.extend( Handler, {
         return resolved;
     }
 });
-
 var Sequence = (function() {
     var slice = [].slice;
 
@@ -266,6 +265,7 @@ $.extend( Autosave.prototype, {
 $.extend( Autosave, {
     classNames: classNames,
     eventNames: eventNames,
+    Handler: Handler,
     handlers: {},
     namespace: namespace,
 

@@ -103,6 +103,7 @@ $.extend( Autosave.prototype, {
 $.extend( Autosave, {
     classNames: classNames,
     eventNames: eventNames,
+    Handler: Handler,
     handlers: {},
     namespace: namespace,
 
