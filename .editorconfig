@@ -1,0 +1,19 @@
+# This file is for unifying the coding style for different editors and IDEs.
+# This project follows the jQuery style guide.
+# http://editorconfig.org
+# http://contribute.jquery.org/style-guide/js/
+
+# This is the top-most configuration file.
+root = true
+
+# All files should have Unix-style newlines and the UTF-8 charset with newlines
+# ending every file and no trailing whitespace.
+[*]
+end_of_line = lf
+charset = utf-8
+trim_trailing_whitespace = true
+insert_final_newline = true
+
+# Tabs in JS unless otherwise specified.
+[**.js]
+indent_style = tab
