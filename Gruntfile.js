@@ -24,18 +24,7 @@ module.exports = function( grunt ) {
         },
         jshint: {
             options: {
-                browser: true,
-                camelcase: true,
-                curly: true,
-                devel: true,
-                eqeqeq: true,
-                jquery: true,
-                latedef: true,
-                maxlen: 120,
-                newcap: true,
-                trailing: true,
-                undef: true,
-                unused: true
+                jshintrc: true
             },
             basic: {
                 src: "<%= concat.basic.dest %>"
@@ -44,26 +33,6 @@ module.exports = function( grunt ) {
                 src: "Gruntfile.js"
             },
             test: {
-                options: {
-                    globals: {
-                        asyncTest: false,
-                        deepEqual: false,
-                        equal: false,
-                        expect: false,
-                        module: false,
-                        notDeepEqual: false,
-                        notEqual: false,
-                        notStrictEqual: false,
-                        ok: false,
-                        QUnit: false,
-                        raises: false,
-                        start: false,
-                        stop: false,
-                        strictEqual: false,
-                        test: false,
-                        throws: false
-                    }
-                },
                 src: "test/unit/*.js"
             }
         },
