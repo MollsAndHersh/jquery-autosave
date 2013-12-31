@@ -1,30 +1,22 @@
 var classNames = namespacer( namespace, [ "change" ], "-", true ),
-    eventNames = namespacer( namespace, [ "change", "keyup" ] );
+    eventNames = namespacer( namespace, [ "change", "keyup" ] ),
+    nameToUuidMap = {};
 
 function Autosave( element, options ) {
-    var form;
+    var $element = $( element ),
+        serlializedValue;
 
-    this.element = element = $( element );
+    this.$element = $element;
     this.options = options;
-
-    // Try to find the form associated the given element
-    if ( element.is( "form" ) ) {
-        form = element;
-
-    } else if ( !( form = element.find( "form" ) ).length ) {
-        form = element.closest( "form" );
-    }
-
-    this.form = form;
 
     // Listen for changes on inputs
     // FIXME: https://github.com/nervetattoo/jquery-autosave/issues/18
-    element.on( eventNames.change + " " + eventNames.keyup, ":input", function( event ) {
-        var target = $( event.target );
+    this.inputs().on( eventNames.change + " " + eventNames.keyup, function( event ) {
+        var $target = $( event.target );
 
-        if ( !target.hasClass( options.ignore ) ) {
-            target.addClass( classNames.change );
-            options.change.apply( target, event );
+        if (  $target.not( options.ignore ) && !$target.hasClass( classNames.change ) ) {
+            $target.addClass( classNames.change );
+            options.change.apply( $target, event );
         }
     });
 
@@ -39,6 +31,10 @@ $.extend( Autosave.prototype, {
         return sequence.reduce(function( handler ) {
             return $.when( handler.setup() ).done(function() {
                 handlers[ handler.uuid ] = handler;
+
+                if ( handler.options && typeof handler.options.name === "string" ) {
+                    nameToUuidMap[ handler.options.name ] = handler.uuid;
+                }
             });
         });
     },
@@ -46,16 +42,37 @@ $.extend( Autosave.prototype, {
     destroy: function() {
         this.interval();
 
-        this.element.removeData( namespace ).off( "autosave" );
+        this.$element.removeData( namespace ).off( "autosave" );
         this.inputs().removeClass( classNames.change );
 
         return this.removeHandler( this.handlers );
     },
 
+    getHandler: function( handler ) {
+        var i, length,
+            handlers = arr( handler ),
+            result = [];
+
+        for ( i = 0, length = handler.length; i < l; i++ ) {
+            handler = handlers[ i ];
+            handler = this.handlers[
+                Handler.isHandler( handler ) ? handler.uuid :
+                ( typeof handler === "string" ? nameToUuidMap[ handler ] : handler )
+            ];
+
+            if ( handler ) {
+                result.push( handler );
+            }
+        }
+
+        return result;
+    },
+
     handlers: {},
 
-    inputs: function() {
-        return this.element.find( ":input" ).not( this.options.ignore );
+    inputs: function( inputs ) {
+        return ( inputs ? $( inputs ) : this.$element )
+            .andSelf().find( ":input" ).not( this.options.ignore );
     },
 
     interval: function( interval, callback ) {
@@ -69,8 +86,15 @@ $.extend( Autosave.prototype, {
         }
     },
 
-    removeHandler: function() {
-        // TODO
+    removeHandler: function( handler ) {
+        var handlers = this.handlers,
+            sequence = new Sequence( this.getHandler( handler ) );
+
+        return sequence.reduce(function( handler ) {
+            return $.when( handler.teardown() ).done(function() {
+                delete handlers[ handler.uuid ];
+            });
+        });
     },
 
     save: function( event, inputs, data ) {
@@ -86,7 +110,7 @@ $.extend( Autosave.prototype, {
         return sequence.reduce({
             data: data,
             event: event,
-            inputs: inputs ? $( inputs ).filter( ":input" ) : this.inputs()
+            inputs: this.inputs( inputs )
         }, function( handler, data ) {
             var dfd = $.Deferred();
 
@@ -104,7 +128,6 @@ $.extend( Autosave, {
     classNames: classNames,
     eventNames: eventNames,
     Handler: Handler,
-    handlers: {},
     namespace: namespace,
 
     options: {
@@ -119,6 +142,3 @@ $.extend( Autosave, {
 
     version: "<%= pkg.version %>"
 });
-
-// Exports
-$.Autosave = Autosave;

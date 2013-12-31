@@ -32,8 +32,25 @@ $.extend( Handler, {
         };
     })(),
 
+    // Get a public handler by name.
+    getHandler: function( name, options ) {
+        return $.extend( true, { options: options }, this.handlers[ name ] );
+    },
+
+    // Register a public handler to a given name.
+    registerHandler: function( name, handler ) {
+        if ( !Handler.isHandler( handler ) ) {
+            error( "The given handler is not valid." );
+
+        } else {
+            this.handlers[ name ] = handler;
+        }
+    },
+
+    handlers: {},
+
     resolveHandler: function( handler ) {
-        var handlers, i, length, type,
+        var handlers, i, length, options, type,
             resolved = [];
 
         if ( !handler ) {
@@ -47,12 +64,10 @@ $.extend( Handler, {
             type = typeof handler;
 
             if ( type === "function" ) {
-                handler = {
-                    run: handler
-                };
+                handler = { run: handler };
 
             } else if ( type === "string" ) {
-                handler = Autosave.handlers[ handler ];
+                handler = this.getHandler( handler );
             }
 
             type = typeof handler;
@@ -61,7 +76,11 @@ $.extend( Handler, {
                 error( "Unable to resolve Handler ( " + type + " )" );
 
             } else if ( !Handler.isHandler( handler ) ) {
-                handler = new Handler( handler );
+                handler = new Handler(
+                    typeof handler.handler === "string" ?
+                        this.getHandler( handler.handler, handler.options ) :
+                        handler
+                );
             }
 
             resolved.push( handler );

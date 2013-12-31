@@ -13,7 +13,7 @@
     test( "Initialization / Destruction", function() {
         expect( 4 );
 
-        var fixture = $( '#qunit-fixture' ).autosave(),
+        var fixture = $( "#qunit-fixture" ).autosave(),
             autosave = fixture.data( 'autosave' );
 
         ok( autosave instanceof jQuery.Autosave, "Autosave instance stored in element." );
@@ -22,7 +22,7 @@
 
         autosave.destroy();
 
-        equal( fixture.data( 'autosave' ), undefined, "Autosave instance has been destroyed." );
+        equal( fixture.data( "autosave" ), undefined, "Autosave instance has been destroyed." );
     });
 
 })( jQuery );

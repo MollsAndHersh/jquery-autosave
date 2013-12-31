@@ -9,7 +9,7 @@
 
   <script type="text/javascript">
     jQuery(function( $ ) {
-        var example = $("#example1");
+        var example = $( "#example1" );
 
         example.autosave({
             handlers: [
@@ -30,14 +30,14 @@
                 }
             ],
             ready: function() {
-                console.log('ready');
+                console.log( "ready" );
             }
-        }).find("[type=text]").val("text");
+        }).find( "[type=text]" ).val( "text" );
 
         example.data( "autosave" ).save().done(function( response ) {
-            console.log('done:', response );
+            console.log( "done:", response );
         }).fail(function( message ) {
-            console.log('failed: ' + message);
+            console.log( "failed: " + message );
         });
     });
   </script>
