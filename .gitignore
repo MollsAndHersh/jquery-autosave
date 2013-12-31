@@ -1,1 +1,11 @@
+*~
+*.diff
+*.patch
+.bower.json
+.DS_Store
+.project
+.settings
+.sizecache.json
+
+bower_components/
 node_modules/
