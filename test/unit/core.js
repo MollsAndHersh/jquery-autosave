@@ -11,13 +11,12 @@
     });
 
     test( "Initialization / Destruction", function() {
-        expect( 4 );
+        expect( 3 );
 
         var fixture = $( "#qunit-fixture" ).autosave(),
             autosave = fixture.data( 'autosave' );
 
         ok( autosave instanceof jQuery.Autosave, "Autosave instance stored in element." );
-        equal( autosave.form.length, 1, "Element contains one form." );
         equal( autosave.inputs().length, 11, "Element contains 11 inputs (one is ignored)." );
 
         autosave.destroy();

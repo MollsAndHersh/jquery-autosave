@@ -1,5 +1,5 @@
 /*!
-jquery.autosave - v2.0.0-rc1 - 2013-12-30
+jquery.autosave - v2.0.0-rc1 - 2013-12-31
 https://github.com/kflorence/jquery-autosave
 Periodically saves form data based on a set of critera.
 
@@ -10,287 +10,329 @@ Released under the BSD, MIT licenses
 (function( window, $, undefined ) {
 "use strict";
 
-var namespace = "autosave";
+var classNames,
+	eventNames,
+	namespace = "autosave",
+	nameToUuidMap = {},
+	Sequence,
+	uuid = 0;
 
 function arr( obj ) {
-    return $.isArray( obj ) ? obj : [ obj ];
+	return $.isArray( obj ) ? obj : [ obj ];
 }
 
 function error( message ) {
-    throw new Error( "( " + namespace + " ) " + message );
+	throw new Error( "( " + namespace + " ) " + message );
 }
 
 function namespacer( namespace, items, separator, before ) {
-    var i, item,
-        length = items.length,
-        namespaced = {};
+	var i, item,
+		length = items.length,
+		namespaced = {};
 
-    if ( length && namespace ) {
-        if ( !separator ) {
-            separator = ".";
-        }
+	if ( length && namespace ) {
+		if ( !separator ) {
+			separator = ".";
+		}
 
-        for ( i = 0; i < length; i++ ) {
-            item = items[ i ];
-            namespaced[ item ] = before ?
-                namespace + separator + item :
-                item + separator + namespace;
-        }
-    }
+		for ( i = 0; i < length; i++ ) {
+			item = items[ i ];
+			namespaced[ item ] = before ?
+				namespace + separator + item :
+				item + separator + namespace;
+		}
+	}
 
-    return namespaced;
+	return namespaced;
 }
-
-var uuid = 0;
 
 function Handler( settings ) {
 
-    // Allow calling without the "new" operator
-    if ( !Handler.isHandler( this ) ) {
-        return new Handler( settings );
-    }
+	// Allow calling without the "new" operator
+	if ( !Handler.isHandler( this ) ) {
+		return new Handler( settings );
+	}
 
-    $.extend( this, settings );
+	$.extend( this, settings );
 
-    this.uuid = uuid++;
+	this.uuid = uuid++;
 }
 
 $.extend( Handler.prototype, {
-    constructor: Handler,
-    options: {},
-    run: $.noop,
-    setup: $.noop,
-    teardown: $.noop
+	constructor: Handler,
+	options: {},
+	run: $.noop,
+	setup: $.noop,
+	teardown: $.noop
 });
 
 $.extend( Handler, {
-    isHandler: (function() {
-        var matches,
-            rFunctionName = /function ([^(]+)/;
+	isHandler: (function() {
+		var matches,
+			rFunctionName = /function ([^(]+)/;
 
-        return function( object ) {
-            return object !== null && typeof object === "object" && object.constructor &&
-                ( matches = rFunctionName.exec( object.constructor.toString() ) ) &&
-                matches[ 1 ] && matches[ 1 ].toLowerCase() === "handler";
-        };
-    })(),
+		return function( object ) {
+			return object !== null && typeof object === "object" && object.constructor &&
+				( matches = rFunctionName.exec( object.constructor.toString() ) ) &&
+				matches[ 1 ] && matches[ 1 ].toLowerCase() === "handler";
+		};
+	})(),
 
-    resolveHandler: function( handler ) {
-        var handlers, i, length, type,
-            resolved = [];
+	// Get a public handler by name.
+	getHandler: function( name, options ) {
+		return $.extend( true, { options: options }, this.handlers[ name ] );
+	},
 
-        if ( !handler ) {
-            return resolved;
-        }
+	// Register a public handler to a given name.
+	registerHandler: function( name, handler ) {
+		if ( !Handler.isHandler( handler ) ) {
+			error( "The given handler is not valid." );
 
-        handlers = arr( handler );
+		} else {
+			this.handlers[ name ] = handler;
+		}
+	},
 
-        for ( i = 0, length = handlers.length; i < length; i++ ) {
-            handler = handlers[ i ];
-            type = typeof handler;
+	handlers: {},
 
-            if ( type === "function" ) {
-                handler = {
-                    run: handler
-                };
+	resolveHandler: function( handler ) {
+		var handlers, i, length, type,
+			resolved = [];
 
-            } else if ( type === "string" ) {
-                handler = Autosave.handlers[ handler ];
-            }
+		if ( !handler ) {
+			return resolved;
+		}
 
-            type = typeof handler;
+		handlers = arr( handler );
 
-            if ( type !== "object" ) {
-                error( "Unable to resolve Handler ( " + type + " )" );
+		for ( i = 0, length = handlers.length; i < length; i++ ) {
+			handler = handlers[ i ];
+			type = typeof handler;
 
-            } else if ( !Handler.isHandler( handler ) ) {
-                handler = new Handler( handler );
-            }
+			if ( type === "function" ) {
+				handler = { run: handler };
 
-            resolved.push( handler );
-        }
+			} else if ( type === "string" ) {
+				handler = this.getHandler( handler );
+			}
 
-        return resolved;
-    }
+			type = typeof handler;
+
+			if ( type !== "object" ) {
+				error( "Unable to resolve Handler ( " + type + " )" );
+
+			} else if ( !Handler.isHandler( handler ) ) {
+				handler = new Handler(
+					typeof handler.handler === "string" ?
+						this.getHandler( handler.handler, handler.options ) :
+						handler
+				);
+			}
+
+			resolved.push( handler );
+		}
+
+		return resolved;
+	}
 });
-var Sequence = (function() {
-    var slice = [].slice;
 
-    function scopedFunc( func /* arg, ... , argsN */ ) {
-        var args = slice.call( arguments, 1 );
+Sequence = (function() {
+	var slice = [].slice;
 
-        return function() {
-            return func.apply( this, args.concat( slice.call( arguments ) ) );
-        };
-    }
+	function scopedFunc( func /* arg, ... , argsN */ ) {
+		var args = slice.call( arguments, 1 );
 
-    return function( items ) {
-        var head = $.Deferred(),
-            master = $.Deferred(),
-            tail = head;
+		return function() {
+			return func.apply( this, args.concat( slice.call( arguments ) ) );
+		};
+	}
 
-        return {
-            head: head,
-            items: items,
-            master: master,
-            reduce: function( value, func, context ) {
+	return function( items ) {
+		var head = $.Deferred(),
+			master = $.Deferred(),
+			tail = head;
 
-                // Args: func, context
-                if ( typeof value === 'function' ) {
-                    context = func;
-                    func = value;
-                    value = undefined;
-                }
+		return {
+			head: head,
+			items: items,
+			master: master,
+			reduce: function( value, func, context ) {
 
-                head.resolveWith( context, arr( value ) );
+				// Args: func, context
+				if ( typeof value === "function" ) {
+					context = func;
+					func = value;
+					value = undefined;
+				}
 
-                $.each( items, function( i, item ) {
-                    tail = tail.pipe( scopedFunc( func, item ) );
-                });
+				head.resolveWith( context, arr( value ) );
 
-                tail.done( scopedFunc( master.resolve ) );
+				$.each( items, function( i, item ) {
+					tail = tail.pipe( scopedFunc( func, item ) );
+				});
 
-                return master;
-            },
-            tail: tail
-        };
-    };
+				tail.done( scopedFunc( master.resolve ) );
+
+				return master;
+			},
+			tail: tail
+		};
+	};
 })();
 
-// Export
-$.Deferred.Sequence = Sequence;
-
-var classNames = namespacer( namespace, [ "change" ], "-", true ),
-    eventNames = namespacer( namespace, [ "change", "keyup" ] );
+classNames = namespacer( namespace, [ "change" ], "-", true );
+eventNames = namespacer( namespace, [ "change", "keyup" ] );
 
 function Autosave( element, options ) {
-    var form;
+	var $element = $( element );
 
-    this.element = element = $( element );
-    this.options = options;
+	this.$element = $element;
+	this.options = options;
 
-    // Try to find the form associated the given element
-    if ( element.is( "form" ) ) {
-        form = element;
+	// Listen for changes on inputs
+	// FIXME: https://github.com/nervetattoo/jquery-autosave/issues/18
+	this.inputs().on( eventNames.change + " " + eventNames.keyup, function( event ) {
+		var $target = $( event.target );
 
-    } else if ( !( form = element.find( "form" ) ).length ) {
-        form = element.closest( "form" );
-    }
+		if (  $target.not( options.ignore ) && !$target.hasClass( classNames.change ) ) {
+			$target.addClass( classNames.change );
+			options.change.apply( $target, event );
+		}
+	});
 
-    this.form = form;
-
-    // Listen for changes on inputs
-    // FIXME: https://github.com/nervetattoo/jquery-autosave/issues/18
-    element.on( eventNames.change + " " + eventNames.keyup, ":input", function( event ) {
-        var target = $( event.target );
-
-        if ( !target.hasClass( options.ignore ) ) {
-            target.addClass( classNames.change );
-            options.change.apply( target, event );
-        }
-    });
-
-    this.addHandler( options.handler || options.handlers ).done( options.ready );
+	this.addHandler( options.handler || options.handlers ).done( options.ready );
 }
 
 $.extend( Autosave.prototype, {
-    addHandler: function( handler ) {
-        var handlers = this.handlers,
-            sequence = new Sequence( Handler.resolveHandler( handler ) );
+	addHandler: function( handler ) {
+		var handlers = this.handlers,
+			sequence = new Sequence( Handler.resolveHandler( handler ) );
 
-        return sequence.reduce(function( handler ) {
-            return $.when( handler.setup() ).done(function() {
-                handlers[ handler.uuid ] = handler;
-            });
-        });
-    },
+		return sequence.reduce(function( handler ) {
+			return $.when( handler.setup() ).done(function() {
+				handlers[ handler.uuid ] = handler;
 
-    destroy: function() {
-        this.interval();
+				if ( handler.options && typeof handler.options.name === "string" ) {
+					nameToUuidMap[ handler.options.name ] = handler.uuid;
+				}
+			});
+		});
+	},
 
-        this.element.removeData( namespace ).off( "autosave" );
-        this.inputs().removeClass( classNames.change );
+	destroy: function() {
+		this.interval();
 
-        return this.removeHandler( this.handlers );
-    },
+		this.$element.removeData( namespace ).off( "autosave" );
+		this.inputs().removeClass( classNames.change );
 
-    handlers: {},
+		return this.removeHandler( this.handlers );
+	},
 
-    inputs: function() {
-        return this.element.find( ":input" ).not( this.options.ignore );
-    },
+	getHandler: function( handler ) {
+		var i, length,
+			handlers = arr( handler ),
+			result = [];
 
-    interval: function( interval, callback ) {
-        if ( this.timer ) {
-            clearTimeout( this.timer );
-            this.timer = null;
-        }
+		for ( i = 0, length = handler.length; i < length; i++ ) {
+			handler = handlers[ i ];
+			handler = this.handlers[
+				Handler.isHandler( handler ) ? handler.uuid :
+				( typeof handler === "string" ? nameToUuidMap[ handler ] : handler )
+			];
 
-        if ( !isNaN( parseInt( interval, 10 ) ) && $.isFunction( callback ) ) {
-            this.timer = setTimeout( $.proxy( callback, this ), interval );
-        }
-    },
+			if ( handler ) {
+				result.push( handler );
+			}
+		}
 
-    removeHandler: function() {
-        // TODO
-    },
+		return result;
+	},
 
-    save: function( event, inputs, data ) {
-        var sequence = new Sequence( this.handlers );
+	handlers: {},
 
-        // Args: inputs, data
-        if ( !( event instanceof $.Event ) ) {
-            data = inputs;
-            inputs = event;
-            event = undefined;
-        }
+	inputs: function( inputs ) {
+		return ( inputs ? $( inputs ) : this.$element )
+			.andSelf().find( ":input" ).not( this.options.ignore );
+	},
 
-        return sequence.reduce({
-            data: data,
-            event: event,
-            inputs: inputs ? $( inputs ).filter( ":input" ) : this.inputs()
-        }, function( handler, data ) {
-            var dfd = $.Deferred();
+	interval: function( interval, callback ) {
+		if ( this.timer ) {
+			clearTimeout( this.timer );
+			this.timer = null;
+		}
 
-            $.when( handler.run( data ) ).done(function( response ) {
-                dfd.resolve( response !== undefined ? response : data );
-            }).fail( sequence.master.reject );
+		if ( !isNaN( parseInt( interval, 10 ) ) && $.isFunction( callback ) ) {
+			this.timer = setTimeout( $.proxy( callback, this ), interval );
+		}
+	},
 
-            return dfd;
-        });
-    }
+	removeHandler: function( handler ) {
+		var handlers = this.handlers,
+			sequence = new Sequence( this.getHandler( handler ) );
+
+		return sequence.reduce(function( handler ) {
+			return $.when( handler.teardown() ).done(function() {
+				delete handlers[ handler.uuid ];
+			});
+		});
+	},
+
+	save: function( event, inputs, data ) {
+		var sequence = new Sequence( this.handlers );
+
+		// Args: inputs, data
+		if ( !( event instanceof $.Event ) ) {
+			data = inputs;
+			inputs = event;
+			event = undefined;
+		}
+
+		return sequence.reduce({
+			data: data,
+			event: event,
+			inputs: this.inputs( inputs )
+		}, function( handler, data ) {
+			var dfd = $.Deferred();
+
+			$.when( handler.run( data ) ).done(function( response ) {
+				dfd.resolve( response !== undefined ? response : data );
+			}).fail( sequence.master.reject );
+
+			return dfd;
+		});
+	}
 });
 
 // Public Static
 $.extend( Autosave, {
-    classNames: classNames,
-    eventNames: eventNames,
-    Handler: Handler,
-    handlers: {},
-    namespace: namespace,
+	classNames: classNames,
+	eventNames: eventNames,
+	Handler: Handler,
+	namespace: namespace,
 
-    options: {
-        handler: null,
-        ignore: ":disabled",
+	options: {
+		handler: null,
+		ignore: ":disabled",
 
-        // Callbacks
-        change: $.noop,
-        save: $.noop,
-        ready: $.noop
-    },
+		// Callbacks
+		change: $.noop,
+		save: $.noop,
+		ready: $.noop
+	},
 
-    version: "2.0.0-rc1"
+	version: "2.0.0-rc1"
 });
+
+$.fn[ namespace ] = function( options ) {
+	options = $.extend( true, {}, Autosave.options, options );
+
+	return this.each(function() {
+		$.data( this, namespace, new Autosave( this, options ) );
+	});
+};
 
 // Exports
 $.Autosave = Autosave;
-
-$.fn[ namespace ] = function( options ) {
-    options = $.extend( true, {}, Autosave.options, options );
-
-    return this.each(function() {
-        $.data( this, namespace, new Autosave( this, options ) );
-    });
-};
+$.Deferred.Sequence = Sequence;
 
 })( this, jQuery );

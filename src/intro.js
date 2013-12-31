@@ -10,4 +10,9 @@ Released under the <%= grunt.util._.pluck( pkg.licenses, "type" ).join( ", " ) %
 (function( window, $, undefined ) {
 "use strict";
 
-var namespace = "autosave";
+var classNames,
+	eventNames,
+	namespace = "autosave",
+	nameToUuidMap = {},
+	Sequence,
+	uuid = 0;
