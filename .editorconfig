@@ -15,5 +15,5 @@ trim_trailing_whitespace = true
 insert_final_newline = true
 
 # JavaScript and JSON
-{**.js,**/.jshintrc}
+{**.js,**.jshintrc,**.json}
 indent_style = tab
