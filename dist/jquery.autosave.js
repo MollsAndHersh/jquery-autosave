@@ -10,12 +10,9 @@ Released under the BSD, MIT licenses
 (function( window, $, undefined ) {
 "use strict";
 
-var classNames,
-	eventNames,
-	namespace = "autosave",
-	nameToUuidMap = {},
-	Sequence,
-	uuid = 0;
+var classNames, eventNames, Sequence,
+	handlerNameToIndex = {},
+	namespace = "autosave";
 
 function arr( obj ) {
 	return $.isArray( obj ) ? obj : [ obj ];
@@ -54,8 +51,6 @@ function Handler( settings ) {
 	}
 
 	$.extend( this, settings );
-
-	this.uuid = uuid++;
 }
 
 $.extend( Handler.prototype, {
@@ -210,10 +205,10 @@ $.extend( Autosave.prototype, {
 
 		return sequence.reduce(function( handler ) {
 			return $.when( handler.setup() ).done(function() {
-				handlers[ handler.uuid ] = handler;
+				handler.id = handlers.push( handler ) - 1;
 
 				if ( handler.options && typeof handler.options.name === "string" ) {
-					nameToUuidMap[ handler.options.name ] = handler.uuid;
+					handlerNameToIndex[ handler.options.name ] = handler.id;
 				}
 			});
 		});
@@ -229,26 +224,33 @@ $.extend( Autosave.prototype, {
 	},
 
 	getHandler: function( handler ) {
-		var i, length,
-			handlers = arr( handler ),
-			result = [];
+		var i, length, handlers,
+			result = [],
+			type = typeof handler;
 
-		for ( i = 0, length = handler.length; i < length; i++ ) {
-			handler = handlers[ i ];
-			handler = this.handlers[
-				Handler.isHandler( handler ) ? handler.uuid :
-				( typeof handler === "string" ? nameToUuidMap[ handler ] : handler )
-			];
+		// Get all handlers
+		if ( type === "undefined" ) {
+			result = this.handlers;
 
-			if ( handler ) {
-				result.push( handler );
+		// Search by handler function, name or index
+		} else {
+			for ( i = 0, length = handler.length; i < length; i++ ) {
+				handler = handlers[ i ];
+				handler = this.handlers[
+					Handler.isHandler( handler ) ? handler.id :
+					( type === "string" ? handlerNameToIndex[ handler ] : handler )
+				];
+
+				if ( handler ) {
+					result.push( handler );
+				}
 			}
 		}
 
 		return result;
 	},
 
-	handlers: {},
+	handlers: [],
 
 	inputs: function( inputs ) {
 		return ( inputs ? $( inputs ) : this.$element )
@@ -272,7 +274,7 @@ $.extend( Autosave.prototype, {
 
 		return sequence.reduce(function( handler ) {
 			return $.when( handler.teardown() ).done(function() {
-				delete handlers[ handler.uuid ];
+				handlers.splice( handler.id, 1 );
 			});
 		});
 	},

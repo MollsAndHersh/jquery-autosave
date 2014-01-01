@@ -6,8 +6,6 @@ function Handler( settings ) {
 	}
 
 	$.extend( this, settings );
-
-	this.uuid = uuid++;
 }
 
 $.extend( Handler.prototype, {
