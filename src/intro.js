@@ -9,7 +9,3 @@ Released under the <%= grunt.util._.pluck( pkg.licenses, "type" ).join( ", " ) %
 
 (function( window, $, undefined ) {
 "use strict";
-
-var classNames, eventNames, Sequence,
-	handlerNameToIndex = {},
-	namespace = "autosave";

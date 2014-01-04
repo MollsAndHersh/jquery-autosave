@@ -1,7 +1,5 @@
-$.fn[ namespace ] = function( options ) {
-	options = $.extend( true, {}, Autosave.options, options );
-
+$.fn.autosave = function( options ) {
 	return this.each(function() {
-		$.data( this, namespace, new Autosave( this, options ) );
+		new Autosave( this, options );
 	});
 };

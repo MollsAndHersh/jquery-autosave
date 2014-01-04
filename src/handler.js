@@ -10,6 +10,7 @@ function Handler( settings ) {
 
 $.extend( Handler.prototype, {
 	constructor: Handler,
+	data: {},
 	options: {},
 	run: $.noop,
 	setup: $.noop,
@@ -17,6 +18,47 @@ $.extend( Handler.prototype, {
 });
 
 $.extend( Handler, {
+	create: function( mixed ) {
+		var handler;
+
+		mixed = this.normalize( mixed );
+
+		if ( mixed ) {
+			handler = new Handler( mixed );
+		}
+
+		return handler;
+	},
+
+	define: function( proto ) {
+		if (
+			!$.isPlainObject( proto ) ||
+			typeof proto.name !== "string" ||
+			!$.isFunction( proto.run )
+		) {
+			throw "Handler prototype must contain a name and run function.";
+		}
+
+		this.prototypes[ proto.name ] = proto;
+	},
+
+	get: function( name, settings ) {
+		var proto;
+
+		// Allow namespacing
+		name = name.split( "." )[ 0 ];
+		proto = this.prototypes[ name ];
+
+		// Clone
+		if ( proto ) {
+			proto = $.extend( true, {}, proto, settings );
+		}
+
+		return proto;
+	},
+
+	prototypes: {},
+
 	isHandler: (function() {
 		var matches,
 			rFunctionName = /function ([^(]+)/;
@@ -28,60 +70,23 @@ $.extend( Handler, {
 		};
 	})(),
 
-	// Get a public handler by name.
-	getHandler: function( name, options ) {
-		return $.extend( true, { options: options }, this.handlers[ name ] );
-	},
+	normalize: function( mixed ) {
+		var handler,
+			type = typeof mixed;
 
-	// Register a public handler to a given name.
-	registerHandler: function( name, handler ) {
-		if ( !Handler.isHandler( handler ) ) {
-			error( "The given handler is not valid." );
+		if ( type === "string" ) {
+			handler = this.get( mixed );
 
-		} else {
-			this.handlers[ name ] = handler;
-		}
-	},
+		} else if ( type === "function" ) {
+			handler = { run: mixed };
 
-	handlers: {},
+		} else if ( $.isPlainObject( mixed ) && typeof mixed.name === "string" ) {
+			handler = this.get( mixed.name, mixed ) || mixed;
 
-	resolveHandler: function( handler ) {
-		var handlers, i, length, type,
-			resolved = [];
-
-		if ( !handler ) {
-			return resolved;
+		} else if ( Handler.isHandler( handler ) ) {
+			handler = mixed;
 		}
 
-		handlers = arr( handler );
-
-		for ( i = 0, length = handlers.length; i < length; i++ ) {
-			handler = handlers[ i ];
-			type = typeof handler;
-
-			if ( type === "function" ) {
-				handler = { run: handler };
-
-			} else if ( type === "string" ) {
-				handler = this.getHandler( handler );
-			}
-
-			type = typeof handler;
-
-			if ( type !== "object" ) {
-				error( "Unable to resolve Handler ( " + type + " )" );
-
-			} else if ( !Handler.isHandler( handler ) ) {
-				handler = new Handler(
-					typeof handler.handler === "string" ?
-						this.getHandler( handler.handler, handler.options ) :
-						handler
-				);
-			}
-
-			resolved.push( handler );
-		}
-
-		return resolved;
+		return handler;
 	}
 });

@@ -1,7 +1,7 @@
-Sequence = (function() {
+var Sequence = (function() {
 	var slice = [].slice;
 
-	function scopedFunc( func /* arg, ... , argsN */ ) {
+	function scopedFunc( func ) {
 		var args = slice.call( arguments, 1 );
 
 		return function() {

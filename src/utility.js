@@ -2,10 +2,6 @@ function arr( obj ) {
 	return $.isArray( obj ) ? obj : [ obj ];
 }
 
-function error( message ) {
-	throw new Error( "( " + namespace + " ) " + message );
-}
-
 function namespacer( namespace, items, separator, before ) {
 	var i, item,
 		length = items.length,

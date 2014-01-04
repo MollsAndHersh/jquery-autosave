@@ -1,25 +1,17 @@
 /*!
-jquery.autosave - v2.0.0-rc1 - 2013-12-31
+jquery.autosave - v2.0.0-rc1 - 2014-01-04
 https://github.com/kflorence/jquery-autosave
 Periodically saves form data based on a set of critera.
 
-Copyright (C) 2013 Kyle Florence
+Copyright (C) 2014 Kyle Florence
 Released under the BSD, MIT licenses
 */
 
 (function( window, $, undefined ) {
 "use strict";
 
-var classNames, eventNames, Sequence,
-	handlerNameToIndex = {},
-	namespace = "autosave";
-
 function arr( obj ) {
 	return $.isArray( obj ) ? obj : [ obj ];
-}
-
-function error( message ) {
-	throw new Error( "( " + namespace + " ) " + message );
 }
 
 function namespacer( namespace, items, separator, before ) {
@@ -55,6 +47,7 @@ function Handler( settings ) {
 
 $.extend( Handler.prototype, {
 	constructor: Handler,
+	data: {},
 	options: {},
 	run: $.noop,
 	setup: $.noop,
@@ -62,6 +55,47 @@ $.extend( Handler.prototype, {
 });
 
 $.extend( Handler, {
+	create: function( mixed ) {
+		var handler;
+
+		mixed = this.normalize( mixed );
+
+		if ( mixed ) {
+			handler = new Handler( mixed );
+		}
+
+		return handler;
+	},
+
+	define: function( proto ) {
+		if (
+			!$.isPlainObject( proto ) ||
+			typeof proto.name !== "string" ||
+			!$.isFunction( proto.run )
+		) {
+			throw "Handler prototype must contain a name and run function.";
+		}
+
+		this.prototypes[ proto.name ] = proto;
+	},
+
+	get: function( name, settings ) {
+		var proto;
+
+		// Allow namespacing
+		name = name.split( "." )[ 0 ];
+		proto = this.prototypes[ name ];
+
+		// Clone
+		if ( proto ) {
+			proto = $.extend( true, {}, proto, settings );
+		}
+
+		return proto;
+	},
+
+	prototypes: {},
+
 	isHandler: (function() {
 		var matches,
 			rFunctionName = /function ([^(]+)/;
@@ -73,68 +107,31 @@ $.extend( Handler, {
 		};
 	})(),
 
-	// Get a public handler by name.
-	getHandler: function( name, options ) {
-		return $.extend( true, { options: options }, this.handlers[ name ] );
-	},
+	normalize: function( mixed ) {
+		var handler,
+			type = typeof mixed;
 
-	// Register a public handler to a given name.
-	registerHandler: function( name, handler ) {
-		if ( !Handler.isHandler( handler ) ) {
-			error( "The given handler is not valid." );
+		if ( type === "string" ) {
+			handler = this.get( mixed );
 
-		} else {
-			this.handlers[ name ] = handler;
-		}
-	},
+		} else if ( type === "function" ) {
+			handler = { run: mixed };
 
-	handlers: {},
+		} else if ( $.isPlainObject( mixed ) && typeof mixed.name === "string" ) {
+			handler = this.get( mixed.name, mixed ) || mixed;
 
-	resolveHandler: function( handler ) {
-		var handlers, i, length, type,
-			resolved = [];
-
-		if ( !handler ) {
-			return resolved;
+		} else if ( Handler.isHandler( handler ) ) {
+			handler = mixed;
 		}
 
-		handlers = arr( handler );
-
-		for ( i = 0, length = handlers.length; i < length; i++ ) {
-			handler = handlers[ i ];
-			type = typeof handler;
-
-			if ( type === "function" ) {
-				handler = { run: handler };
-
-			} else if ( type === "string" ) {
-				handler = this.getHandler( handler );
-			}
-
-			type = typeof handler;
-
-			if ( type !== "object" ) {
-				error( "Unable to resolve Handler ( " + type + " )" );
-
-			} else if ( !Handler.isHandler( handler ) ) {
-				handler = new Handler(
-					typeof handler.handler === "string" ?
-						this.getHandler( handler.handler, handler.options ) :
-						handler
-				);
-			}
-
-			resolved.push( handler );
-		}
-
-		return resolved;
+		return handler;
 	}
 });
 
-Sequence = (function() {
+var Sequence = (function() {
 	var slice = [].slice;
 
-	function scopedFunc( func /* arg, ... , argsN */ ) {
+	function scopedFunc( func ) {
 		var args = slice.call( arguments, 1 );
 
 		return function() {
@@ -175,79 +172,113 @@ Sequence = (function() {
 	};
 })();
 
-classNames = namespacer( namespace, [ "change" ], "-", true );
-eventNames = namespacer( namespace, [ "change", "keyup" ] );
-
 function Autosave( element, options ) {
-	var $element = $( element );
+	var classNames, eventNames, handlers, namespace,
+		$element = $( element );
 
+	// Options
+	options = $.extend( true, {}, Autosave.options, options );
+	namespace = options.namespace;
+	classNames = namespacer( namespace, [ "change" ], "-", true );
+	eventNames = namespacer( namespace, [ "change", "keyup" ] );
+	handlers = options.handler || options.handlers;
+
+	// Properties
 	this.$element = $element;
+	this.classNames = classNames;
+	this.eventNames = eventNames;
+	this.namespace = namespace;
 	this.options = options;
+
+	// Initialization
+	$element.data( namespace, this );
 
 	// Listen for changes on inputs
 	// FIXME: https://github.com/nervetattoo/jquery-autosave/issues/18
 	this.inputs().on( eventNames.change + " " + eventNames.keyup, function( event ) {
 		var $target = $( event.target );
 
-		if (  $target.not( options.ignore ) && !$target.hasClass( classNames.change ) ) {
+		if ( $target.not( options.ignore ) && !$target.hasClass( classNames.change ) ) {
 			$target.addClass( classNames.change );
 			options.change.apply( $target, event );
 		}
 	});
 
-	this.addHandler( options.handler || options.handlers ).done( options.ready );
+	this.addHandler( handlers ).done( options.ready );
 }
 
 $.extend( Autosave.prototype, {
-	addHandler: function( handler ) {
-		var handlers = this.handlers,
-			sequence = new Sequence( Handler.resolveHandler( handler ) );
+	addHandler: function( mixed ) {
+		var handler,
+			handlers = this.handlers;
 
-		return sequence.reduce(function( handler ) {
-			return $.when( handler.setup() ).done(function() {
-				handler.id = handlers.push( handler ) - 1;
+		mixed = arr( mixed );
 
-				if ( handler.options && typeof handler.options.name === "string" ) {
-					handlerNameToIndex[ handler.options.name ] = handler.id;
-				}
-			});
+		return new Sequence( mixed ).reduce(function( item ) {
+			handler = Handler.create( item );
+
+			if ( handler ) {
+				return $.when( handler.setup() ).done(function() {
+					handler.data.index = handlers.push( handler ) - 1;
+				});
+			}
 		});
 	},
 
 	destroy: function() {
 		this.interval();
 
-		this.$element.removeData( namespace ).off( "autosave" );
-		this.inputs().removeClass( classNames.change );
+		this.$element.removeData( this.namespace ).off( this.namespace );
+		this.inputs().removeClass( this.classNames.change );
 
 		return this.removeHandler( this.handlers );
 	},
 
-	getHandler: function( handler ) {
-		var i, length, handlers,
-			result = [],
-			type = typeof handler;
+	getHandler: function( mixed ) {
+		var handler, item, j, type,
+			i = 0,
+			handlers = [];
 
-		// Get all handlers
-		if ( type === "undefined" ) {
-			result = this.handlers;
+		if ( mixed == null ) {
+			return this.handlers;
+		}
 
-		// Search by handler function, name or index
-		} else {
-			for ( i = 0, length = handler.length; i < length; i++ ) {
-				handler = handlers[ i ];
-				handler = this.handlers[
-					Handler.isHandler( handler ) ? handler.id :
-					( type === "string" ? handlerNameToIndex[ handler ] : handler )
-				];
+		mixed = arr( mixed );
+
+		for ( ; i < mixed.length; i++ ) {
+			item = mixed[ i ];
+
+			if ( item == null ) {
+				continue;
+			}
+
+			type = typeof item;
+
+			if ( type === "number" ) {
+				handler = this.handlers[ item ];
 
 				if ( handler ) {
-					result.push( handler );
+					handlers.push( handler );
 				}
+
+			} else if ( type === "string" ) {
+				for ( j = 0; j < this.handlers.length; j++ ) {
+					handler = this.handlers[ j ];
+
+					if (
+						typeof handler.name === "string" &&
+						new RegExp( item + "(?:\\.|)" ).test( handler.name )
+					) {
+						handlers.push( handler );
+					}
+				}
+
+			} else if ( Handler.isHandler( item ) && item === this.handlers[ item.data.index ] ) {
+				handlers.push( item );
 			}
 		}
 
-		return result;
+		return handlers;
 	},
 
 	handlers: [],
@@ -268,13 +299,13 @@ $.extend( Autosave.prototype, {
 		}
 	},
 
-	removeHandler: function( handler ) {
+	removeHandler: function( mixed ) {
 		var handlers = this.handlers,
-			sequence = new Sequence( this.getHandler( handler ) );
+			sequence = new Sequence( this.getHandler( mixed ) );
 
 		return sequence.reduce(function( handler ) {
 			return $.when( handler.teardown() ).done(function() {
-				handlers.splice( handler.id, 1 );
+				handlers.splice( handler.data.index, 1 );
 			});
 		});
 	},
@@ -305,36 +336,35 @@ $.extend( Autosave.prototype, {
 	}
 });
 
+// Add the plural form of applicable prototype functions
+$.each( [ "addHandler", "getHandler", "removeHandler" ], function( index, name ) {
+	Autosave.prototype[ name + "s" ] = Autosave.prototype[ name ];
+});
+
 // Public Static
 $.extend( Autosave, {
-	classNames: classNames,
-	eventNames: eventNames,
 	Handler: Handler,
-	namespace: namespace,
-
 	options: {
 		handler: null,
 		ignore: ":disabled",
+		namespace: "autosave",
 
 		// Callbacks
 		change: $.noop,
 		save: $.noop,
 		ready: $.noop
 	},
-
+	Sequence: Sequence,
 	version: "2.0.0-rc1"
 });
 
-$.fn[ namespace ] = function( options ) {
-	options = $.extend( true, {}, Autosave.options, options );
-
+$.fn.autosave = function( options ) {
 	return this.each(function() {
-		$.data( this, namespace, new Autosave( this, options ) );
+		new Autosave( this, options );
 	});
 };
 
 // Exports
 $.Autosave = Autosave;
-$.Deferred.Sequence = Sequence;
 
 })( this, jQuery );
