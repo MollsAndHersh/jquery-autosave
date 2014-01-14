@@ -1,5 +1,5 @@
 /*!
-jquery.autosave - v2.0.0-rc1 - 2014-01-04
+jquery.autosave - v2.0.0-rc1 - 2014-01-13
 https://github.com/kflorence/jquery-autosave
 Periodically saves form data based on a set of critera.
 
@@ -10,6 +10,8 @@ Released under the BSD, MIT licenses
 (function( window, $, undefined ) {
 "use strict";
 
+var Sequence,
+	uuid = 0;
 function arr( obj ) {
 	return $.isArray( obj ) ? obj : [ obj ];
 }
@@ -43,6 +45,8 @@ function Handler( settings ) {
 	}
 
 	$.extend( this, settings );
+
+	this.uuid = uuid++;
 }
 
 $.extend( Handler.prototype, {
@@ -51,7 +55,10 @@ $.extend( Handler.prototype, {
 	options: {},
 	run: $.noop,
 	setup: $.noop,
-	teardown: $.noop
+	teardown: $.noop,
+	toString: function() {
+		return "Handler:" + this.uuid;
+	}
 });
 
 $.extend( Handler, {
@@ -128,7 +135,7 @@ $.extend( Handler, {
 	}
 });
 
-var Sequence = (function() {
+Sequence = (function() {
 	var slice = [].slice;
 
 	function scopedFunc( func ) {
@@ -173,8 +180,15 @@ var Sequence = (function() {
 })();
 
 function Autosave( element, options ) {
-	var classNames, eventNames, handlers, namespace,
-		$element = $( element );
+	var $element, classNames, eventNames, handlers, namespace;
+
+	// Allow omission of element argument
+	if ( $.isPlainObject( element ) ) {
+		options = element;
+		element = [];
+	}
+
+	$element = $( element );
 
 	// Options
 	options = $.extend( true, {}, Autosave.options, options );
@@ -210,16 +224,14 @@ function Autosave( element, options ) {
 $.extend( Autosave.prototype, {
 	addHandler: function( mixed ) {
 		var handler,
-			handlers = this.handlers;
+			self = this;
 
-		mixed = arr( mixed );
-
-		return new Sequence( mixed ).reduce(function( item ) {
+		return new Sequence( arr( mixed ) ).reduce(function( item ) {
 			handler = Handler.create( item );
 
 			if ( handler ) {
-				return $.when( handler.setup() ).done(function() {
-					handler.data.index = handlers.push( handler ) - 1;
+				return $.when( handler.setup( self ) ).done(function() {
+					handler.data.index = self.handlers.push( handler ) - 1;
 				});
 			}
 		});

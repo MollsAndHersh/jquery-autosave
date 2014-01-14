@@ -2,22 +2,51 @@
 
 	module( "Methods" );
 
-	test( "addHandler", function() {
-		expect( 3 );
+	function getHash( obj ) {
+		return $.map(
+			obj instanceof $.Autosave ? obj.getHandlers() : $.makeArray( obj ),
+			function( data ) {
+				return data.name;
+			}
+		).join( ", " );
+	}
 
-		var autosave = new $.Autosave( null, {
-			handler: { name: "handler1" }
+	test( "addHandler", function() {
+		var instance,
+			data = [
+				"handler1",
+				"handler2",
+				[ "handler3", "handler4" ]
+			],
+			tests = [];
+
+		function getHandlerPrototype( name ) {
+			return {
+				name: name,
+				setup: function( autosave ) {
+					ok( autosave instanceof $.Autosave, "Setup called for " + this.name );
+				}
+			};
+		}
+
+		$.each( data, function( index, datum ) {
+			tests.push( $.map( $.makeArray( datum ), getHandlerPrototype ) );
 		});
 
-		equal( autosave.getHandlers().length, 1, "One handler present after initialization" );
+		$.each( tests, function( index, test ) {
+			var hash = getHash( test );
 
-		autosave.addHandler({ name: "handler2" });
+			if ( index === 0 ) {
+				instance = new $.Autosave({ handler: test });
 
-		equal( autosave.getHandlers().length, 2, "Two handlers present after adding a single handler" );
+			} else {
+				instance.addHandlers( test );
+			}
 
-		autosave.addHandlers( [ { name: "handler3" }, { name: "handler4" } ] );
+			ok( new RegExp( hash + "$" ).test( getHash( instance ) ), "Added " + hash );
+		});
 
-		equal( autosave.getHandlers().length, 4, "Four handlers present after adding two more handlers" );
+		expect( 7 );
 	});
 
 })( jQuery );

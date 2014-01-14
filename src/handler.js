@@ -6,6 +6,8 @@ function Handler( settings ) {
 	}
 
 	$.extend( this, settings );
+
+	this.uuid = uuid++;
 }
 
 $.extend( Handler.prototype, {
@@ -14,7 +16,10 @@ $.extend( Handler.prototype, {
 	options: {},
 	run: $.noop,
 	setup: $.noop,
-	teardown: $.noop
+	teardown: $.noop,
+	toString: function() {
+		return "Handler:" + this.uuid;
+	}
 });
 
 $.extend( Handler, {

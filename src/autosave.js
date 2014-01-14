@@ -1,6 +1,13 @@
 function Autosave( element, options ) {
-	var classNames, eventNames, handlers, namespace,
-		$element = $( element );
+	var $element, classNames, eventNames, handlers, namespace;
+
+	// Allow omission of element argument
+	if ( $.isPlainObject( element ) ) {
+		options = element;
+		element = [];
+	}
+
+	$element = $( element );
 
 	// Options
 	options = $.extend( true, {}, Autosave.options, options );
@@ -36,16 +43,14 @@ function Autosave( element, options ) {
 $.extend( Autosave.prototype, {
 	addHandler: function( mixed ) {
 		var handler,
-			handlers = this.handlers;
+			self = this;
 
-		mixed = arr( mixed );
-
-		return new Sequence( mixed ).reduce(function( item ) {
+		return new Sequence( arr( mixed ) ).reduce(function( item ) {
 			handler = Handler.create( item );
 
 			if ( handler ) {
-				return $.when( handler.setup() ).done(function() {
-					handler.data.index = handlers.push( handler ) - 1;
+				return $.when( handler.setup( self ) ).done(function() {
+					handler.data.index = self.handlers.push( handler ) - 1;
 				});
 			}
 		});

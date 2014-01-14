@@ -1,4 +1,4 @@
-var Sequence = (function() {
+Sequence = (function() {
 	var slice = [].slice;
 
 	function scopedFunc( func ) {
