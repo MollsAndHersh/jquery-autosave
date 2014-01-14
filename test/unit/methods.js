@@ -40,7 +40,7 @@
 				instance = new $.Autosave({ handler: test });
 
 			} else {
-				instance.addHandlers( test );
+				instance[ 'addHandler' + ( $.isArray( test ) ? 's' : '' ) ]( test );
 			}
 
 			ok( new RegExp( hash + "$" ).test( getHash( instance ) ), "Added " + hash );
