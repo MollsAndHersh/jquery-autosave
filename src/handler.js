@@ -5,15 +5,18 @@ function Handler( settings ) {
 		return new Handler( settings );
 	}
 
-	$.extend( this, settings );
-
+	// Properties
+	this.data = {};
+	this.options = {};
 	this.uuid = uuid++;
+
+	$.extend( this, settings );
 }
 
 $.extend( Handler.prototype, {
-	constructor: Handler,
-	data: {},
-	options: {},
+	equals: function( handler ) {
+		return Handler.isHandler( handler ) && this.uuid === handler.uuid;
+	},
 	run: $.noop,
 	setup: $.noop,
 	teardown: $.noop,
