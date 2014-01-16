@@ -46,7 +46,7 @@ $.extend( Autosave.prototype, {
 		var handler,
 			self = this;
 
-		return new Sequence( arr( mixed ) ).reduce(function( item ) {
+		return new Sequence( mixed ).reduce(function( item ) {
 			handler = Handler.create( item );
 
 			if ( handler ) {
@@ -75,7 +75,7 @@ $.extend( Autosave.prototype, {
 			return this.handlers;
 		}
 
-		mixed = arr( mixed );
+		mixed = $.makeArray( mixed );
 
 		for ( ; i < mixed.length; i++ ) {
 			item = mixed[ i ];

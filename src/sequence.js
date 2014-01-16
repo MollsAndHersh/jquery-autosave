@@ -14,6 +14,8 @@ Sequence = (function() {
 			master = $.Deferred(),
 			tail = head;
 
+		items = $.makeArray( items );
+
 		return {
 			head: head,
 			items: items,
@@ -27,7 +29,7 @@ Sequence = (function() {
 					value = undefined;
 				}
 
-				head.resolveWith( context, arr( value ) );
+				head.resolveWith( context, $.makeArray( value ) );
 
 				$.each( items, function( i, item ) {
 					tail = tail.pipe( scopedFunc( func, item ) );

@@ -1,7 +1,3 @@
-function arr( obj ) {
-	return $.isArray( obj ) ? obj : [ obj ];
-}
-
 function namespacer( namespace, items, separator, before ) {
 	var i, item,
 		length = items.length,

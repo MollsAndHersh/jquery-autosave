@@ -12,10 +12,6 @@ Released under the BSD, MIT licenses
 
 var Sequence,
 	uuid = 0;
-function arr( obj ) {
-	return $.isArray( obj ) ? obj : [ obj ];
-}
-
 function namespacer( namespace, items, separator, before ) {
 	var i, item,
 		length = items.length,
@@ -154,6 +150,8 @@ Sequence = (function() {
 			master = $.Deferred(),
 			tail = head;
 
+		items = $.makeArray( items );
+
 		return {
 			head: head,
 			items: items,
@@ -167,7 +165,7 @@ Sequence = (function() {
 					value = undefined;
 				}
 
-				head.resolveWith( context, arr( value ) );
+				head.resolveWith( context, $.makeArray( value ) );
 
 				$.each( items, function( i, item ) {
 					tail = tail.pipe( scopedFunc( func, item ) );
@@ -230,7 +228,7 @@ $.extend( Autosave.prototype, {
 		var handler,
 			self = this;
 
-		return new Sequence( arr( mixed ) ).reduce(function( item ) {
+		return new Sequence( mixed ).reduce(function( item ) {
 			handler = Handler.create( item );
 
 			if ( handler ) {
@@ -259,7 +257,7 @@ $.extend( Autosave.prototype, {
 			return this.handlers;
 		}
 
-		mixed = arr( mixed );
+		mixed = $.makeArray( mixed );
 
 		for ( ; i < mixed.length; i++ ) {
 			item = mixed[ i ];
