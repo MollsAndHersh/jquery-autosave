@@ -1,5 +1,5 @@
 /*!
-jquery.autosave - v2.0.0-rc1 - 2014-01-13
+jquery.autosave - v2.0.0-rc1 - 2014-01-15
 https://github.com/kflorence/jquery-autosave
 Periodically saves form data based on a set of critera.
 
@@ -44,15 +44,18 @@ function Handler( settings ) {
 		return new Handler( settings );
 	}
 
-	$.extend( this, settings );
-
+	// Properties
+	this.data = {};
+	this.options = {};
 	this.uuid = uuid++;
+
+	$.extend( this, settings );
 }
 
 $.extend( Handler.prototype, {
-	constructor: Handler,
-	data: {},
-	options: {},
+	equals: function( handler ) {
+		return Handler.isHandler( handler ) && this.uuid === handler.uuid;
+	},
 	run: $.noop,
 	setup: $.noop,
 	teardown: $.noop,
@@ -127,7 +130,7 @@ $.extend( Handler, {
 		} else if ( $.isPlainObject( mixed ) && typeof mixed.name === "string" ) {
 			handler = this.get( mixed.name, mixed ) || mixed;
 
-		} else if ( Handler.isHandler( handler ) ) {
+		} else if ( this.isHandler( mixed ) ) {
 			handler = mixed;
 		}
 
@@ -201,6 +204,7 @@ function Autosave( element, options ) {
 	this.$element = $element;
 	this.classNames = classNames;
 	this.eventNames = eventNames;
+	this.handlers = [];
 	this.namespace = namespace;
 	this.options = options;
 
@@ -279,21 +283,19 @@ $.extend( Autosave.prototype, {
 
 					if (
 						typeof handler.name === "string" &&
-						new RegExp( item + "(?:\\.|)" ).test( handler.name )
+						new RegExp( item + "(?:\\.|$)" ).test( handler.name )
 					) {
 						handlers.push( handler );
 					}
 				}
 
-			} else if ( Handler.isHandler( item ) && item === this.handlers[ item.data.index ] ) {
+			} else if ( Handler.isHandler( item ) && item.equals( this.handlers[ item.data.index ] ) ) {
 				handlers.push( item );
 			}
 		}
 
 		return handlers;
 	},
-
-	handlers: [],
 
 	inputs: function( inputs ) {
 		return ( inputs ? $( inputs ) : this.$element )
@@ -312,12 +314,12 @@ $.extend( Autosave.prototype, {
 	},
 
 	removeHandler: function( mixed ) {
-		var handlers = this.handlers,
+		var self = this,
 			sequence = new Sequence( this.getHandler( mixed ) );
 
 		return sequence.reduce(function( handler ) {
-			return $.when( handler.teardown() ).done(function() {
-				handlers.splice( handler.data.index, 1 );
+			return $.when( handler.teardown( self ) ).done(function() {
+				self.handlers.splice( handler.data.index, 1, undefined );
 			});
 		});
 	},
