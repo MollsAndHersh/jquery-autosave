@@ -20,6 +20,7 @@ function Autosave( element, options ) {
 	this.$element = $element;
 	this.classNames = classNames;
 	this.eventNames = eventNames;
+	this.handlers = [];
 	this.namespace = namespace;
 	this.options = options;
 
@@ -112,8 +113,6 @@ $.extend( Autosave.prototype, {
 		return handlers;
 	},
 
-	handlers: [],
-
 	inputs: function( inputs ) {
 		return ( inputs ? $( inputs ) : this.$element )
 			.andSelf().find( ":input" ).not( this.options.ignore );
@@ -131,12 +130,12 @@ $.extend( Autosave.prototype, {
 	},
 
 	removeHandler: function( mixed ) {
-		var handlers = this.handlers,
+		var self = this,
 			sequence = new Sequence( this.getHandler( mixed ) );
 
 		return sequence.reduce(function( handler ) {
-			return $.when( handler.teardown() ).done(function() {
-				handlers.splice( handler.data.index, 1 );
+			return $.when( handler.teardown( self ) ).done(function() {
+				self.handlers.splice( handler.data.index, 1, undefined );
 			});
 		});
 	},
