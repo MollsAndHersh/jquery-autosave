@@ -12,8 +12,8 @@ module.exports = function( grunt ) {
                 },
                 src: [
                     "src/intro.js",
-                    "src/utility.js",
                     "src/handler.js",
+                    "src/namespacer.js",
                     "src/sequence.js",
                     "src/autosave.js",
                     "src/jquery-bridge.js",
