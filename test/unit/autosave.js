@@ -1,6 +1,6 @@
 (function( $, undefined ) {
 
-	module( "Methods", {
+	module( "Autosave", {
 		setup: function() {
 			$.Autosave.Handler.prototypes = {};
 		}

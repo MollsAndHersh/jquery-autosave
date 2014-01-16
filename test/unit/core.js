@@ -2,7 +2,7 @@
 
 	module( "Core" );
 
-	test( "Requirements", function() {
+	test( "Dependencies", function() {
 		expect( 5 );
 
 		ok( $, "jQuery exists" );
@@ -12,6 +12,7 @@
 		ok( $.fn.autosave, "jQuery.fn.Autosave exists" );
 	});
 
+	// TODO: move to unit/autosave.js and unit/jquery-bridge.js
 	test( "Initialization / Destruction", function() {
 		var fixture = $( "#qunit-fixture" ).autosave(),
 			autosave = fixture.data( 'autosave' );
