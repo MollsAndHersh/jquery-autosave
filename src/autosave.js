@@ -99,13 +99,13 @@ $.extend( Autosave.prototype, {
 
 					if (
 						typeof handler.name === "string" &&
-						new RegExp( item + "(?:\\.|)" ).test( handler.name )
+						new RegExp( item + "(?:\\.|$)" ).test( handler.name )
 					) {
 						handlers.push( handler );
 					}
 				}
 
-			} else if ( Handler.isHandler( item ) && item === this.handlers[ item.data.index ] ) {
+			} else if ( Handler.isHandler( item ) && item.equals( this.handlers[ item.data.index ] ) ) {
 				handlers.push( item );
 			}
 		}
