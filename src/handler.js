@@ -88,7 +88,7 @@ $.extend( Handler, {
 		} else if ( $.isPlainObject( mixed ) && typeof mixed.name === "string" ) {
 			handler = this.get( mixed.name, mixed ) || mixed;
 
-		} else if ( Handler.isHandler( handler ) ) {
+		} else if ( this.isHandler( mixed ) ) {
 			handler = mixed;
 		}
 
