@@ -1,6 +1,7 @@
 *~
 *.diff
 *.patch
+*.sublime*
 .bower.json
 .DS_Store
 .project
