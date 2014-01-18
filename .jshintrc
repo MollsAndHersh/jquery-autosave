@@ -1,22 +1,17 @@
 {
-	"boss": true,
+	"camelcase": true,
 	"curly": true,
 	"eqeqeq": true,
 	"eqnull": true,
 	"expr": true,
-	"immed": true,
-	"noarg": true,
-	"onevar": true,
-	"quotmark": "double",
-	"smarttabs": true,
-	"trailing": true,
-	"undef": true,
-	"unused": true,
-
-	"browser": true,
-	"camelcase": true,
-	"jquery": true,
+	"globals": {
+		"define": true
+	},
 	"latedef": true,
-	"maxlen": 120,
-	"newcap": true
+	"immed": true,
+	"newcap": true,
+	"noarg": true,
+	"quotmark": "double",
+	"undef": true,
+	"unused": true
 }
