@@ -7,8 +7,4 @@ Copyright (C) <%= grunt.template.today( "yyyy" ) %> <%= pkg.author.name %>
 Released under the <%= grunt.util._.pluck( pkg.licenses, "type" ).join( ", " ) %> licenses
 */
 
-(function( window, $, undefined ) {
-"use strict";
-
-var Sequence,
-	uuid = 0;
+(function() {
