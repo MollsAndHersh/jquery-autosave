@@ -1,5 +1,9 @@
-Sequence = (function() {
-	var slice = [].slice;
+define( [
+	"jquery"
+], function(
+	$
+) {
+	var slice = Array.prototype.slice;
 
 	function scopedFunc( func ) {
 		var args = slice.call( arguments, 1 );
@@ -42,4 +46,4 @@ Sequence = (function() {
 			tail: tail
 		};
 	};
-})();
+});
