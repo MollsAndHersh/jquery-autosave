@@ -5,15 +5,18 @@
 ## Contributing
 
 Clone this repository:
- git clone git@github.com:kflorence/jquery-autosave.git
+
+    git clone git@github.com:kflorence/jquery-autosave.git
 
 Install developer dependencies:
- cd jquery-autosave && npm install && bower install
+
+    cd jquery-autosave && npm install && bower install
 
 Make a build:
- grunt
+
+    grunt
 
 ## License
 
-Copyright (C) 2014 Kyle Florence.
+Copyright (C) 2014 Kyle Florence.  
 jQuery.autosave is dual licensed under the BSD and MIT licenses.
