@@ -1,5 +1,5 @@
 /*!
-jquery.autosave - v2.0.0-rc1 - 2014-01-15
+jquery.autosave - v2.0.0-rc1 - 2014-01-18
 https://github.com/kflorence/jquery-autosave
 Periodically saves form data based on a set of critera.
 
@@ -7,31 +7,20 @@ Copyright (C) 2014 Kyle Florence
 Released under the BSD, MIT licenses
 */
 
-(function( window, $, undefined ) {
-"use strict";
+(function( factory ) {
 
-var Sequence,
-	uuid = 0;
-function namespacer( namespace, items, separator, before ) {
-	var i, item,
-		length = items.length,
-		namespaced = {};
+	// AMD
+	if ( typeof define === "function" && define.amd ) {
+		define( [ "jquery" ], factory );
 
-	if ( length && namespace ) {
-		if ( !separator ) {
-			separator = ".";
-		}
-
-		for ( i = 0; i < length; i++ ) {
-			item = items[ i ];
-			namespaced[ item ] = before ?
-				namespace + separator + item :
-				item + separator + namespace;
-		}
+	// Browser
+	} else {
+		factory( jQuery );
 	}
 
-	return namespaced;
-}
+})(function( $ ) {
+
+var uuid = 0;
 
 function Handler( settings ) {
 
@@ -134,51 +123,70 @@ $.extend( Handler, {
 	}
 });
 
-Sequence = (function() {
-	var slice = [].slice;
+function namespacer( namespace, items, separator, before ) {
+	var i, item,
+		length = items.length,
+		namespaced = {};
 
-	function scopedFunc( func ) {
-		var args = slice.call( arguments, 1 );
+	if ( length && namespace ) {
+		if ( !separator ) {
+			separator = ".";
+		}
 
-		return function() {
-			return func.apply( this, args.concat( slice.call( arguments ) ) );
-		};
+		for ( i = 0; i < length; i++ ) {
+			item = items[ i ];
+			namespaced[ item ] = before ?
+				namespace + separator + item :
+				item + separator + namespace;
+		}
 	}
 
-	return function( items ) {
-		var head = $.Deferred(),
-			master = $.Deferred(),
-			tail = head;
+	return namespaced;
+}
 
-		items = $.makeArray( items );
+var slice = Array.prototype.slice;
 
-		return {
-			head: head,
-			items: items,
-			master: master,
-			reduce: function( value, func, context ) {
+function scopedFunc( func ) {
+	var args = slice.call( arguments, 1 );
 
-				// Args: func, context
-				if ( typeof value === "function" ) {
-					context = func;
-					func = value;
-					value = undefined;
-				}
-
-				head.resolveWith( context, $.makeArray( value ) );
-
-				$.each( items, function( i, item ) {
-					tail = tail.pipe( scopedFunc( func, item ) );
-				});
-
-				tail.done( scopedFunc( master.resolve ) );
-
-				return master;
-			},
-			tail: tail
-		};
+	return function() {
+		return func.apply( this, args.concat( slice.call( arguments ) ) );
 	};
-})();
+}
+
+function Sequence( items ) {
+	var head = $.Deferred(),
+		master = $.Deferred(),
+		tail = head;
+
+	items = $.makeArray( items );
+
+	return {
+		head: head,
+		items: items,
+		master: master,
+		reduce: function( value, func, context ) {
+
+			// Args: func, context
+			if ( typeof value === "function" ) {
+				context = func;
+				func = value;
+				value = undefined;
+			}
+
+			head.resolveWith( context, $.makeArray( value ) );
+
+			$.each( items, function( i, item ) {
+				tail = tail.pipe( scopedFunc( func, item ) );
+			});
+
+			tail.done( scopedFunc( master.resolve ) );
+
+			return master;
+		},
+		tail: tail
+	};
+}
 
 function Autosave( element, options ) {
 	var $element, classNames, eventNames, handlers, namespace;
@@ -299,7 +307,8 @@ $.extend( Autosave.prototype, {
 		return ( inputs ? $( inputs ) : this.$element )
 			.andSelf().find( ":input" ).not( this.options.ignore );
 	},
-
+/*
+	// TODO: move this into a Handler
 	interval: function( interval, callback ) {
 		if ( this.timer ) {
 			clearTimeout( this.timer );
@@ -310,7 +319,7 @@ $.extend( Autosave.prototype, {
 			this.timer = setTimeout( $.proxy( callback, this ), interval );
 		}
 	},
-
+*/
 	removeHandler: function( mixed ) {
 		var self = this,
 			sequence = new Sequence( this.getHandler( mixed ) );
@@ -367,16 +376,7 @@ $.extend( Autosave, {
 		ready: $.noop
 	},
 	Sequence: Sequence,
-	version: "2.0.0-rc1"
+	version: "<%= pkg.version %>"
 });
 
-$.fn.autosave = function( options ) {
-	return this.each(function() {
-		new Autosave( this, options );
-	});
-};
-
-// Exports
-$.Autosave = Autosave;
-
-})( this, jQuery );
+});
