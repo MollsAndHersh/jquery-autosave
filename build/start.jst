@@ -7,4 +7,15 @@ Copyright (C) <%= grunt.template.today( "yyyy" ) %> <%= pkg.author.name %>
 Released under the <%= grunt.util._.pluck( pkg.licenses, "type" ).join( ", " ) %> licenses
 */
 
-(function() {
+(function( factory ) {
+
+	// AMD
+	if ( typeof define === "function" && define.amd ) {
+		define( [ "jquery" ], factory );
+
+	// Browser
+	} else {
+		factory( jQuery );
+	}
+
+})(function( $ ) {
