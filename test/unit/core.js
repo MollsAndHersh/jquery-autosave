@@ -15,7 +15,7 @@
 	// TODO: move to unit/autosave.js and unit/jquery-bridge.js
 	test( "Initialization / Destruction", function() {
 		var fixture = $( "#qunit-fixture" ).autosave(),
-			autosave = fixture.data( 'autosave' );
+			autosave = fixture.data( "autosave" );
 
 		expect( 3 );
 

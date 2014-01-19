@@ -70,12 +70,11 @@ $.extend( Autosave.prototype, {
 	},
 
 	destroy: function() {
-		this.interval();
-
-		this.$element.removeData( this.namespace ).off( this.namespace );
-		this.inputs().removeClass( this.classNames.change );
-
-		return this.removeHandler( this.handlers );
+		return this.removeHandler( this.handlers )
+			.done( $.proxy(function() {
+				this.$element.removeData( this.namespace ).off( this.namespace );
+				this.inputs().removeClass( this.classNames.change );
+			}, this ) );
 	},
 
 	getHandler: function( mixed ) {

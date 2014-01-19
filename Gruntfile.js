@@ -1,6 +1,6 @@
 /* global module:false */
 module.exports = function( grunt ) {
-    var rDefineBegin = /^define\([^{]*?{[^}\w]*/,
+    var rDefineBegin = /^define\([^{]*?{[^}\w\$]*/,
         rDefineEnd = /\}\);[^}\w]*$/,
         rModuleExport = /\s*return\s+[^}]+(\}\);[^}\w]*)$/;
 
@@ -46,7 +46,7 @@ module.exports = function( grunt ) {
                     exclude: [
                         "jquery"
                     ],
-                    name: "autosave",
+                    name: "jquery-bridge",
                     onBuildWrite: processBuildContents,
                     optimize: "none",
                     out: "dist/jquery.autosave.js",
@@ -96,8 +96,6 @@ module.exports = function( grunt ) {
     });
 
     // Load plugins from npm
-    grunt.task.loadNpmTasks( "grunt-contrib-clean" );
-    grunt.task.loadNpmTasks( "grunt-contrib-concat" );
     grunt.task.loadNpmTasks( "grunt-contrib-jshint" );
     grunt.task.loadNpmTasks( "grunt-contrib-qunit" );
     grunt.task.loadNpmTasks( "grunt-contrib-requirejs" );
@@ -107,8 +105,9 @@ module.exports = function( grunt ) {
     // Dev build
     grunt.task.registerTask( "default", [
         "jshint",
-        //"qunit",
-        "requirejs"
+        "requirejs",
+        // TODO don't use dist file in qunit so we can run it before compiling
+        "qunit"
     ]);
 
     // Production ready build
