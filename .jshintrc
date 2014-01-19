@@ -5,7 +5,8 @@
 	"eqnull": true,
 	"expr": true,
 	"globals": {
-		"define": true
+		"define": true,
+		"module": true
 	},
 	"latedef": true,
 	"immed": true,

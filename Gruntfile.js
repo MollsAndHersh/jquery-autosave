@@ -1,4 +1,3 @@
-/* global module:false */
 module.exports = function( grunt ) {
     var rDefineBegin = /^define\([^{]*?{[^}\w\$]*/,
         rDefineEnd = /\}\);[^}\w]*$/,
@@ -15,6 +14,9 @@ module.exports = function( grunt ) {
     grunt.config.init({
         pkg: grunt.file.readJSON( "package.json" ),
 
+        // TODO
+        //jscs: {},
+
         // JavaScript linting. Configuration options are defined in .jshintrc
         jshint: {
             options: {
@@ -30,6 +32,9 @@ module.exports = function( grunt ) {
                 src: "test/unit/**/*.js"
             }
         },
+
+        // TODO
+        //jsonlint: {},
 
         // JavaScript unit tests.
         qunit: {
