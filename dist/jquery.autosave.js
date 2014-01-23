@@ -1,5 +1,5 @@
 /*!
-jquery.autosave - v2.0.0-rc1 - 2014-01-18
+jquery.autosave - v2.0.0-rc1 - 2014-01-22
 https://github.com/kflorence/jquery-autosave
 Periodically saves form data based on a set of critera.
 

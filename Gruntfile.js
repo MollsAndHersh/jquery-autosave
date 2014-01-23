@@ -1,7 +1,7 @@
 module.exports = function( grunt ) {
-    var rDefineBegin = /^define\([^{]*?{[^}\w\$]*/,
-        rDefineEnd = /\}\);[^}\w]*$/,
-        rModuleExport = /\s*return\s+[^}]+(\}\);[^}\w]*)$/;
+    var rDefineBegin = /^define\([^{]*?{\s*/,
+        rDefineEnd = /\}\);\s*$/,
+        rModuleExport = /\s*return\s+[^}]+(\}\);\s*)$/;
 
     // Strip out AMD definitions on build
     function processBuildContents( name, path, contents ) {
