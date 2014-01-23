@@ -55,9 +55,6 @@ module.exports = function( grunt ) {
                     onBuildWrite: processBuildContents,
                     optimize: "none",
                     out: "dist/jquery.autosave.js",
-                    paths: {
-                        jquery: "../bower_components/jquery/jquery"
-                    },
                     skipSemiColonInsertion: true,
                     wrap: {
                         start: grunt.file.read( "build/start.jst" ),
