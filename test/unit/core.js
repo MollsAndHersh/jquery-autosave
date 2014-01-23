@@ -1,30 +1,28 @@
-(function( $, undefined ) {
+define( [ 'jquery', 'qunit' ], function( $, QUnit ) {
+	QUnit.module( "Core" );
 
-	module( "Core" );
+	QUnit.test( "Dependencies", function() {
+		QUnit.expect( 5 );
 
-	test( "Dependencies", function() {
-		expect( 5 );
-
-		ok( $, "jQuery exists" );
-		ok( $.Autosave, "jQuery.Autosave exists" );
-		ok( $.Autosave.Handler, "jQuery.Autosave.Handler exists" );
-		ok( $.Autosave.Sequence, "jQuery.Autosave.Sequence" );
-		ok( $.fn.autosave, "jQuery.fn.Autosave exists" );
+		QUnit.ok( $, "jQuery exists" );
+		QUnit.ok( $.Autosave, "jQuery.Autosave exists" );
+		QUnit.ok( $.Autosave.Handler, "jQuery.Autosave.Handler exists" );
+		QUnit.ok( $.Autosave.Sequence, "jQuery.Autosave.Sequence" );
+		QUnit.ok( $.fn.autosave, "jQuery.fn.Autosave exists" );
 	});
 
 	// TODO: move to unit/autosave.js and unit/jquery-bridge.js
-	test( "Initialization / Destruction", function() {
+	QUnit.test( "Initialization / Destruction", function() {
 		var fixture = $( "#qunit-fixture" ).autosave(),
 			autosave = fixture.data( "autosave" );
 
-		expect( 3 );
+		QUnit.expect( 3 );
 
-		ok( autosave instanceof jQuery.Autosave, "Autosave instance stored in element." );
-		equal( autosave.inputs().length, 11, "Element contains 11 inputs (one is ignored)." );
+		QUnit.ok( autosave instanceof jQuery.Autosave, "Autosave instance stored in element." );
+		QUnit.equal( autosave.inputs().length, 11, "Element contains 11 inputs (one is ignored)." );
 
 		autosave.destroy();
 
-		equal( fixture.data( "autosave" ), undefined, "Autosave instance has been destroyed." );
+		QUnit.equal( fixture.data( "autosave" ), undefined, "Autosave instance has been destroyed." );
 	});
-
-})( jQuery );
+});

@@ -1,22 +1,28 @@
 (function() {
-	var src = [
-			'jquery-bridge'
-		],
-		units = [
-			'unit/core',
-			'unit/autosave'
-		];
-
-	QUnit.config.autostart = false;
-
 	require.config({
 		baseUrl: '../src',
 		paths: {
-			unit: '../test/unit',
-			jquery: 'empty:'
+			jquery: '../bower_components/jquery/jquery',
+			qunit: '../bower_components/qunit/qunit/qunit',
+			unit: '../test/unit'
+		},
+		shim: {
+			qunit: {
+				exports: 'QUnit'
+			}
 		}
 	});
 
-	// Defer QUnit test runner until all tests have loaded
-	require( src.concat( units ), QUnit.start );
+	require( [ 'qunit' ], function( QUnit ) {
+		var source = [
+				'jquery-bridge'
+			],
+			units = [
+				'unit/core',
+				'unit/autosave'
+			];
+
+		// Defer QUnit test runner until all tests have loaded
+		require( source.concat( units ), QUnit.load );
+	});
 })();

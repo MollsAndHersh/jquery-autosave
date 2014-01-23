@@ -1,6 +1,5 @@
-(function( $, undefined ) {
-
-	module( "Autosave", {
+define( [ 'jquery', 'qunit' ], function( $, QUnit ) {
+	QUnit.module( "Autosave", {
 		setup: function() {
 			$.Autosave.Handler.prototypes = {};
 		}
@@ -28,7 +27,7 @@
 		return result;
 	}
 
-	test( "addHandler(s)", function() {
+	QUnit.test( "addHandler(s)", function() {
 		var instance,
 			data = [
 				"handler1",
@@ -39,7 +38,7 @@
 				return {
 					name: name,
 					setup: function( autosave ) {
-						ok( autosave instanceof $.Autosave, "Setup called for " + this.name );
+						QUnit.ok( autosave instanceof $.Autosave, "Setup called for " + this.name );
 					}
 				};
 			});
@@ -58,13 +57,13 @@
 				instance[ "addHandler" + ( $.isArray( test ) ? "s" : "" ) ]( test );
 			}
 
-			ok( new RegExp( hash + "$" ).test( getHash( instance, hasher ) ), "Added " + hash );
+			QUnit.ok( new RegExp( hash + "$" ).test( getHash( instance, hasher ) ), "Added " + hash );
 		});
 
-		expect( 7 );
+		QUnit.expect( 7 );
 	});
 
-	test( "getHandler(s)", function() {
+	QUnit.test( "getHandler(s)", function() {
 		var instance = new $.Autosave({
 				handlers: [
 					function() {},
@@ -91,7 +90,6 @@
 			equal( getHash( instance.getHandlers( test[ 0 ] ), hasher ), test[ 1 ], "Got " + test[ 1 ] );
 		});
 
-		expect( tests.length );
+		QUnit.expect( tests.length );
 	});
-
-})( jQuery );
+});
