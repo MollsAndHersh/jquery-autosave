@@ -107,14 +107,13 @@ module.exports = function( grunt ) {
     // Dev build
     grunt.task.registerTask( "default", [
         "jshint",
-        "requirejs",
-        // TODO don't use dist file in qunit so we can run it before compiling
         "qunit"
     ]);
 
     // Production ready build
     grunt.task.registerTask( "build", [
         "default",
+        "requirejs",
         "uglify"
     ]);
 };
