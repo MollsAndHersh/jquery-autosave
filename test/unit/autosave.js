@@ -1,5 +1,5 @@
-define( [ 'jquery', 'qunit' ], function( $, QUnit ) {
-	QUnit.module( "Autosave", {
+define( [ "jquery" ], function( $ ) {
+	module( "Autosave", {
 		setup: function() {
 			$.Autosave.Handler.prototypes = {};
 		}
@@ -27,7 +27,28 @@ define( [ 'jquery', 'qunit' ], function( $, QUnit ) {
 		return result;
 	}
 
-	QUnit.test( "addHandler(s)", function() {
+	test( "constructor", function() {
+		var autosave = new $.Autosave({
+				ready: function() {
+					ok( true, "Ready called." );
+				}
+			});
+
+		$.each([
+			"$element",
+			"classNames",
+			"eventNames",
+			"handlers",
+			"namespace",
+			"options"
+		], function( index, value ) {
+			ok( autosave[ value ], "Instance contains property '" + value + "' after initialization." );
+		});
+
+		expect( 7 );
+	});
+
+	test( "addHandler(s)", function() {
 		var instance,
 			data = [
 				"handler1",
@@ -38,7 +59,7 @@ define( [ 'jquery', 'qunit' ], function( $, QUnit ) {
 				return {
 					name: name,
 					setup: function( autosave ) {
-						QUnit.ok( autosave instanceof $.Autosave, "Setup called for " + this.name );
+						ok( autosave instanceof $.Autosave, "Setup called for " + this.name );
 					}
 				};
 			});
@@ -57,13 +78,13 @@ define( [ 'jquery', 'qunit' ], function( $, QUnit ) {
 				instance[ "addHandler" + ( $.isArray( test ) ? "s" : "" ) ]( test );
 			}
 
-			QUnit.ok( new RegExp( hash + "$" ).test( getHash( instance, hasher ) ), "Added " + hash );
+			ok( new RegExp( hash + "$" ).test( getHash( instance, hasher ) ), "Added " + hash );
 		});
 
-		QUnit.expect( 7 );
+		expect( 7 );
 	});
 
-	QUnit.test( "getHandler(s)", function() {
+	test( "getHandler(s)", function() {
 		var instance = new $.Autosave({
 				handlers: [
 					function() {},
@@ -90,6 +111,6 @@ define( [ 'jquery', 'qunit' ], function( $, QUnit ) {
 			equal( getHash( instance.getHandlers( test[ 0 ] ), hasher ), test[ 1 ], "Got " + test[ 1 ] );
 		});
 
-		QUnit.expect( tests.length );
+		expect( tests.length );
 	});
 });

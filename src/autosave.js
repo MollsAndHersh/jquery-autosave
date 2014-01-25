@@ -11,45 +11,29 @@ define( [
 ) {
 
 function Autosave( element, options ) {
-	var $element, classNames, eventNames, handlers, namespace;
+	var classNames, eventNames, handlers;
 
 	// Allow omission of element argument
 	if ( $.isPlainObject( element ) ) {
 		options = element;
-		element = [];
+		element = undefined;
 	}
-
-	$element = $( element );
 
 	// Options
 	options = $.extend( true, {}, Autosave.options, options );
-	namespace = options.namespace;
-	classNames = namespacer( namespace, [ "change" ], "-", true );
-	eventNames = namespacer( namespace, [ "change", "keyup" ] );
+	classNames = namespacer( options.namespace, [ "change" ], "-", true );
+	eventNames = namespacer( options.namespace, [ "change", "keyup" ] );
 	handlers = options.handler || options.handlers;
 
 	// Properties
-	this.$element = $element;
 	this.classNames = classNames;
 	this.eventNames = eventNames;
 	this.handlers = [];
-	this.namespace = namespace;
+	this.namespace = options.namespace;
 	this.options = options;
 
 	// Initialization
-	$element.data( namespace, this );
-
-	// Listen for changes on inputs
-	// FIXME: https://github.com/nervetattoo/jquery-autosave/issues/18
-	this.inputs().on( eventNames.change + " " + eventNames.keyup, function( event ) {
-		var $target = $( event.target );
-
-		if ( $target.not( options.ignore ) && !$target.hasClass( classNames.change ) ) {
-			$target.addClass( classNames.change );
-			options.change.apply( $target, event );
-		}
-	});
-
+	this.attach( element );
 	this.addHandler( handlers ).done( options.ready );
 }
 
@@ -69,12 +53,43 @@ $.extend( Autosave.prototype, {
 		});
 	},
 
+	attach: function( element ) {
+		var self = this;
+
+		this.$element = $( element || [] )
+			.addClass( this.namespace )
+			.data( this.namespace, this );
+
+		// TODO: move this into a Handler
+		// FIXME: https://github.com/nervetattoo/jquery-autosave/issues/18
+		this.inputs().on( this.eventNames.change + " " + this.eventNames.keyup, function( event ) {
+			var $target = $( event.target );
+
+			if (
+				$target.not( self.options.ignore ) &&
+				!$target.hasClass( self.classNames.change )
+			) {
+				$.when(
+					self.options.change.apply( $target.get( 0 ), event )
+				).done(function() {
+					$target.addClass( self.classNames.change );
+				});
+			}
+		});
+	},
+
 	destroy: function() {
 		return this.removeHandler( this.handlers )
-			.done( $.proxy(function() {
-				this.$element.removeData( this.namespace ).off( this.namespace );
-				this.inputs().removeClass( this.classNames.change );
-			}, this ) );
+			.done( $.proxy( this.detach, this ) );
+	},
+
+	detach: function() {
+		this.$element
+			.removeClass( this.namespace )
+			.removeData( this.namespace );
+
+		// TODO: move this into a handler
+		this.inputs().off( this.namespace );
 	},
 
 	getHandler: function( mixed ) {
@@ -187,13 +202,10 @@ $.each( [ "addHandler", "getHandler", "removeHandler" ], function( index, name )
 $.extend( Autosave, {
 	Handler: Handler,
 	options: {
+		change: $.noop,
 		handler: null,
 		ignore: ":disabled",
 		namespace: "autosave",
-
-		// Callbacks
-		change: $.noop,
-		save: $.noop,
 		ready: $.noop
 	},
 	Sequence: Sequence,
