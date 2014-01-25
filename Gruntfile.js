@@ -48,13 +48,13 @@ module.exports = function( grunt ) {
             compile: {
                 options: {
                     baseUrl: "./src",
-                    exclude: [
-                        "jquery"
-                    ],
                     name: "jquery-bridge",
                     onBuildWrite: processBuildContents,
                     optimize: "none",
                     out: "dist/jquery.autosave.js",
+                    paths: {
+                        jquery: "empty:"
+                    },
                     skipSemiColonInsertion: true,
                     wrap: {
                         start: grunt.file.read( "build/start.jst" ),
