@@ -15,6 +15,5 @@
 	});
 
 	// Defer QUnit test runner until all tests have loaded
-	QUnit.config.autostart = false;
 	require( source.concat( units ), QUnit.start );
 })();
