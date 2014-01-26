@@ -29,7 +29,6 @@ function Autosave( element, options ) {
 	this.classNames = classNames;
 	this.eventNames = eventNames;
 	this.handlers = [];
-	this.namespace = options.namespace;
 	this.options = options;
 
 	// Initialization
@@ -54,15 +53,16 @@ $.extend( Autosave.prototype, {
 	},
 
 	attach: function( element ) {
-		var self = this;
+		var $element = $( element || [] ),
+			self = this;
 
-		this.$element = $( element || [] )
-			.addClass( this.namespace )
-			.data( this.namespace, this );
+		( this.$element ? this.$element.add( $element ) : ( this.$element = $element ) )
+			.addClass( this.options.namespace )
+			.data( this.options.namespace, this );
 
 		// TODO: move this into a Handler
 		// FIXME: https://github.com/nervetattoo/jquery-autosave/issues/18
-		this.inputs().on( this.eventNames.change + " " + this.eventNames.keyup, function( event ) {
+		this.getInputs().on( this.eventNames.change + " " + this.eventNames.keyup, function( event ) {
 			var $target = $( event.target );
 
 			if (
@@ -85,11 +85,17 @@ $.extend( Autosave.prototype, {
 
 	detach: function() {
 		this.$element
-			.removeClass( this.namespace )
-			.removeData( this.namespace );
+			.removeClass( this.options.namespace )
+			.removeData( this.options.namespace );
+
+		this.$element = $( [] );
 
 		// TODO: move this into a handler
-		this.inputs().off( this.namespace );
+		this.getInputs().off( this.options.namespace );
+	},
+
+	getElement: function() {
+		return this.$element;
 	},
 
 	getHandler: function( mixed ) {
@@ -139,10 +145,15 @@ $.extend( Autosave.prototype, {
 		return handlers;
 	},
 
-	inputs: function( inputs ) {
+	getInputs: function( inputs ) {
 		return ( inputs ? $( inputs ) : this.$element )
 			.andSelf().find( ":input" ).not( this.options.ignore );
 	},
+
+	getOption: function( key ) {
+		return key === undefined ? this.options : this.options[ key ];
+	},
+
 /*
 	// TODO: move this into a Handler
 	interval: function( interval, callback ) {
@@ -180,7 +191,7 @@ $.extend( Autosave.prototype, {
 		return sequence.reduce({
 			data: data,
 			event: event,
-			inputs: this.inputs( inputs )
+			inputs: this.getInputs( inputs )
 		}, function( handler, data ) {
 			var dfd = $.Deferred();
 
@@ -194,7 +205,12 @@ $.extend( Autosave.prototype, {
 });
 
 // Add the plural form of applicable prototype functions
-$.each( [ "addHandler", "getHandler", "removeHandler" ], function( index, name ) {
+$.each([
+	"addHandler",
+	"getHandler",
+	"getOption",
+	"removeHandler"
+], function( index, name ) {
 	Autosave.prototype[ name + "s" ] = Autosave.prototype[ name ];
 });
 

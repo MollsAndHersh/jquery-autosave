@@ -1,19 +1,21 @@
 (function() {
-	var source = [
-			'jquery-bridge'
+	var dependencies = [
+			"jquery-bridge",
+			"testutils"
 		],
 		units = [
-			'unit/autosave'
+			"unit/autosave"
 		];
 
 	require.config({
-		baseUrl: '../src',
+		baseUrl: "../src",
 		paths: {
-			jquery: '../bower_components/jquery/jquery',
-			unit: '../test/unit'
+			jquery: "../bower_components/jquery/jquery",
+			testutils: "../test/testutils",
+			unit: "../test/unit"
 		}
 	});
 
 	// Defer QUnit test runner until all tests have loaded
-	require( source.concat( units ), QUnit.start );
+	require( dependencies.concat( units ), QUnit.start );
 })();
