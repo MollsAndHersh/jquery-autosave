@@ -46,9 +46,9 @@ $.extend( Handler, {
 		if (
 			!$.isPlainObject( proto ) ||
 			typeof proto.name !== "string" ||
-			!$.isFunction( proto.run )
+			!( $.isFunction( proto.setup ) || $.isFunction( proto.run ) || $.isFunction( proto.teardown ) )
 		) {
-			throw "Handler prototype must contain a name and run function.";
+			throw "Handler prototype must contain a name and at least one of the lifecycle functions.";
 		}
 
 		this.prototypes[ proto.name ] = proto;
@@ -56,6 +56,10 @@ $.extend( Handler, {
 
 	get: function( name, settings ) {
 		var proto;
+
+		if ( typeof name !== "string" ) {
+			return;
+		}
 
 		// Allow namespacing
 		name = name.split( "." )[ 0 ];
@@ -92,7 +96,7 @@ $.extend( Handler, {
 		} else if ( type === "function" ) {
 			handler = { run: mixed };
 
-		} else if ( $.isPlainObject( mixed ) && typeof mixed.name === "string" ) {
+		} else if ( $.isPlainObject( mixed ) ) {
 			handler = this.get( mixed.name, mixed ) || mixed;
 
 		} else if ( this.isHandler( mixed ) ) {

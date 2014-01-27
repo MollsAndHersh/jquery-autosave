@@ -13,6 +13,11 @@ define( [
 function Autosave( element, options ) {
 	var classNames, eventNames, handlers;
 
+	// Allow calling without the 'new' operator
+	if ( !( this instanceof Autosave ) ) {
+		return new Autosave( element, options );
+	}
+
 	// Allow omission of element argument
 	if ( $.isPlainObject( element ) ) {
 		options = element;
@@ -79,7 +84,7 @@ $.extend( Autosave.prototype, {
 	},
 
 	destroy: function() {
-		return this.removeHandler( this.handlers )
+		return this.removeHandlers( this.handlers )
 			.done( $.proxy( this.detach, this ) );
 	},
 

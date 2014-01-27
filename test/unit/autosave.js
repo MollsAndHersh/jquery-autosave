@@ -1,5 +1,71 @@
 define( [ "jquery-bridge", "testutils" ], function( $, utils ) {
-	var autosaveFactory = utils.constructorApply.bind( null, $.Autosave );
+	var autosaveFactory = utils.constructorApply.bind( null, $.Autosave ),
+		elementExistsCase = {
+			actual: function() {
+				return this.instance.getElement() instanceof jQuery;
+			},
+			expected: true,
+			message: "Element is attached."
+		},
+		elementHasLengthCase = {
+			actual: getElementLength,
+			expected: 1,
+			message: "Element contains one DOM Element."
+		},
+		elementHasNoLengthCase = {
+			actual: getElementLength,
+			expected: 0,
+			message: "Element contains zero DOM Elements."
+		},
+		attachedTest = {
+			args: [
+				"#qunit-fixture"
+			],
+			cases: [
+				elementExistsCase,
+				elementHasLengthCase,
+				{
+					actual: elementHasClass,
+					expected: true,
+					message: "Element has namespace class."
+				},
+				{
+					actual: getElementData,
+					expected: function() {
+						return this.instance;
+					},
+					message: "Element has instance stored in data."
+				}
+			]
+		},
+		detachedTest = {
+			cases: [
+				elementExistsCase,
+				elementHasNoLengthCase,
+				{
+					actual: elementHasClass,
+					expected: false,
+					message: "Element does not have namespace class."
+				},
+				{
+					actual: getElementData,
+					expected: undefined,
+					message: "Element does not have instance stored in data."
+				}
+			]
+		};
+
+	function elementHasClass() {
+		return this.instance.getElement().hasClass( 'autosave' );
+	}
+
+	function getElementData() {
+		return this.instance.getElement().data( 'autosave' );
+	}
+
+	function getElementLength() {
+		return this.instance.getElement().length;
+	}
 
 	module( "Autosave", {
 		setup: function() {
@@ -127,81 +193,89 @@ define( [ "jquery-bridge", "testutils" ], function( $, utils ) {
 
 	test( "attach", function() {
 		var expects,
-			tests,
-			elementExists = {
-				actual: function() {
-					return this.instance.getElement() instanceof jQuery;
-				},
-				expected: true,
-				message: "Element is attached."
-			};
-
-		function elementHasClass() {
-			return this.instance.getElement().hasClass( 'autosave' );
-		}
-
-		function getElementData() {
-			return this.instance.getElement().data( 'autosave' );
-		}
-
-		function getElementLength() {
-			return this.instance.getElement().length;
-		}
-
-		tests = [
-			{
-				cases: [
-					{
-						actual: elementHasClass,
-						expected: false,
-						message: "Element does not have namespace class."
-					},
-					{
-						actual: getElementData,
-						expected: undefined,
-						message: "Element does not have instance stored in data."
-					},
-					{
-						actual: getElementLength,
-						expected: 0,
-						message: "Element contains zero DOM Elements."
-					}
-				]
-			},
-			{
-				args: [
-					$( "#qunit-fixture" )
-				],
-				cases: [
-					{
-						actual: elementHasClass,
-						expected: true,
-						message: "Element has namespace class."
-					},
-					{
-						actual: getElementData,
-						expected: function() {
-							return this.instance;
-						},
-						message: "Element has instance stored in data."
-					},
-					{
-						actual: getElementLength,
-						expected: 1,
-						message: "Element contains one DOM Element."
-					}
-				]
-			}
-		];
-
-		// Every test gets element exists check
-		$.each( tests, function( index, test ) {
-			test.cases.unshift( elementExists );
-		} );
+			tests = [
+				detachedTest,
+				attachedTest
+			];
 
 		expects = utils.runFactoryTests( autosaveFactory, tests, function() {
 			return "Instance " + this.test.index + ": " + this.testCase.message;
 		});
+
+		expect( expects );
+	});
+
+	test( "destroy", function() {
+		var instance = new $.Autosave( "#qunit-fixture", {
+			handlers: [
+				{
+					teardown: function() {
+						ok( true, "Teardown called." );
+					}
+				},
+				{
+					teardown: function() {
+						var dfd = $.Deferred();
+						setTimeout(function() {
+							ok( true, "Deferred teardown called." );
+							start();
+							dfd.resolve();
+						}, 0);
+						return dfd;
+					}
+				}
+			]
+		});
+
+		stop();
+
+		instance.destroy().done(function() {
+			ok( true, "Done called." );
+		});
+
+		expect( 3 );
+	});
+
+	test( "detach", function() {
+		var expects,
+			tests = [
+			$.extend({
+				args: [
+					"#qunit-fixture"
+				],
+				setup: function() {
+					this.instance.detach();
+				}
+			}, detachedTest )
+		];
+
+		expects = utils.runFactoryTests( autosaveFactory, tests );
+
+		expect( expects );
+	});
+
+	test( "getElement", function() {
+		var expects,
+			tests = [
+				{
+					args: [],
+					cases: [
+						elementExistsCase,
+						elementHasNoLengthCase
+					]
+				},
+				{
+					args: [
+						"#qunit-fixture"
+					],
+					cases: [
+						elementExistsCase,
+						elementHasLengthCase
+					]
+				}
+			];
+
+		expects = utils.runFactoryTests( autosaveFactory, tests );
 
 		expect( expects );
 	});
@@ -234,5 +308,28 @@ define( [ "jquery-bridge", "testutils" ], function( $, utils ) {
 		});
 
 		expect( tests.length );
+	});
+
+	test( "getOption(s)", function() {
+		var tests = {
+				handler: { name: "handler" },
+				ignore: ".ignore",
+				namespace: "myNamespace",
+				ready: function() {}
+			},
+			instance = new $.Autosave({
+				handler: tests.handler,
+				ignore: tests.ignore,
+				namespace: tests.namespace,
+				ready: tests.ready
+			});
+
+		$.each( tests, function( key, value ) {
+			deepEqual( instance.getOption( key ), tests[ key ], "Got option '" + key + "'." );
+		});
+
+		deepEqual( instance.getOptions(), $.extend( {}, $.Autosave.options, tests ), "Got all options." );
+
+		expect( utils.objectLength( tests ) + 1 );
 	});
 });
