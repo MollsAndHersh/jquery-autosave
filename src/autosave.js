@@ -33,7 +33,7 @@ function Autosave( element, options ) {
 	// Properties
 	this.classNames = classNames;
 	this.eventNames = eventNames;
-	this.handlers = [];
+	this.handlers = {};
 	this.options = options;
 
 	// Initialization
@@ -51,7 +51,7 @@ $.extend( Autosave.prototype, {
 
 			if ( handler ) {
 				return $.when( handler.setup( self ) ).done(function() {
-					handler.data.index = self.handlers.push( handler ) - 1;
+					self.handlers[ handler.uuid ] = handler;
 				});
 			}
 		});
@@ -84,7 +84,7 @@ $.extend( Autosave.prototype, {
 	},
 
 	destroy: function() {
-		return this.removeHandlers( this.handlers )
+		return this.removeHandlers( this.getHandlers() )
 			.done( $.proxy( this.detach, this ) );
 	},
 
@@ -104,12 +104,14 @@ $.extend( Autosave.prototype, {
 	},
 
 	getHandler: function( mixed ) {
-		var handler, item, j, type,
+		var handler, item, key, type,
 			i = 0,
 			handlers = [];
 
 		if ( mixed == null ) {
-			return this.handlers;
+			return $.map( this.handlers, function( handler ) {
+				return handler;
+			});
 		}
 
 		mixed = $.makeArray( mixed );
@@ -131,8 +133,8 @@ $.extend( Autosave.prototype, {
 				}
 
 			} else if ( type === "string" ) {
-				for ( j = 0; j < this.handlers.length; j++ ) {
-					handler = this.handlers[ j ];
+				for ( key in this.handlers ) {
+					handler = this.handlers[ key ];
 
 					if (
 						typeof handler.name === "string" &&
@@ -142,7 +144,7 @@ $.extend( Autosave.prototype, {
 					}
 				}
 
-			} else if ( Handler.isHandler( item ) && item.equals( this.handlers[ item.data.index ] ) ) {
+			} else if ( Handler.isHandler( item ) && item.equals( this.handlers[ item.uuid ] ) ) {
 				handlers.push( item );
 			}
 		}
@@ -174,17 +176,17 @@ $.extend( Autosave.prototype, {
 */
 	removeHandler: function( mixed ) {
 		var self = this,
-			sequence = new Sequence( this.getHandler( mixed ) );
+			sequence = new Sequence( this.getHandlers( mixed ) );
 
 		return sequence.reduce(function( handler ) {
 			return $.when( handler.teardown( self ) ).done(function() {
-				self.handlers.splice( handler.data.index, 1, undefined );
+				delete self.handlers[ handler.uuid ];
 			});
 		});
 	},
 
 	save: function( event, inputs, data ) {
-		var sequence = new Sequence( this.handlers );
+		var sequence = new Sequence( this.getHandlers() );
 
 		// Args: inputs, data
 		if ( !( event instanceof $.Event ) ) {

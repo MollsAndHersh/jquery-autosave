@@ -162,11 +162,13 @@ define( [ "jquery-bridge", "testutils" ], function( $, utils ) {
 				"handler2",
 				[ "handler3", "handler4" ]
 			],
+			expects = 0,
 			tests = utils.map( data, function( name ) {
 				return {
 					name: name,
 					setup: function( autosave ) {
 						ok( autosave instanceof $.Autosave, "Setup called for " + this.name );
+						expects++;
 					}
 				};
 			});
@@ -188,7 +190,7 @@ define( [ "jquery-bridge", "testutils" ], function( $, utils ) {
 			ok( new RegExp( hash + "$" ).test( utils.getHash( instance, hasher ) ), "Added " + hash );
 		});
 
-		expect( 7 );
+		expect( tests.length + expects );
 	});
 
 	test( "attach", function() {
@@ -283,24 +285,24 @@ define( [ "jquery-bridge", "testutils" ], function( $, utils ) {
 	test( "getHandler(s)", function() {
 		var instance = new $.Autosave({
 				handlers: [
-					function() {},
+					new $.Autosave.Handler({ name: "handlerfoo" }),
 					{ name: "handler" },
-					{ name: "handler.foo" },
-					new $.Autosave.Handler({ name: "handlerfoo" })
+					{ name: "handler.foo" }
 				]
 			}),
+			handlers = instance.getHandlers(),
 			tests = [
-				[ undefined, "0, 1, 2, 3" ],
-				[ null, "0, 1, 2, 3" ],
-				[ 1, "1" ],
-				[ "handler", "1, 2" ],
-				[ "handler.foo", "2" ],
-				[ "handlerfoo", "3" ],
-				[ instance.getHandler( 3 ), "3" ]
+				[ undefined, "handlerfoo, handler, handler.foo" ],
+				[ null, "handlerfoo, handler, handler.foo" ],
+				[ handlers[ 1 ].uuid, "handler" ],
+				[ "handler", "handler, handler.foo" ],
+				[ "handler.foo", "handler.foo" ],
+				[ "handlerfoo", "handlerfoo" ],
+				[ handlers[ 0 ], "handlerfoo" ]
 			];
 
 		function hasher( handler ) {
-			return handler.data.index;
+			return handler.name;
 		}
 
 		$.each( tests, function( index, test ) {
@@ -346,5 +348,42 @@ define( [ "jquery-bridge", "testutils" ], function( $, utils ) {
 		deepEqual( instance.getOptions(), $.extend( {}, $.Autosave.options, tests ), "Got all options." );
 
 		expect( utils.objectLength( tests ) + 1 );
+	});
+
+	test( "removeHandler(s)", function() {
+		var data = [
+				"handler1",
+				"handler2",
+				[ "handler3", "handler4" ]
+			],
+			expects = 0,
+			instance = $.Autosave({
+				handlers: utils.map( $.map( data, function( value ) {
+					return value;
+
+				}), function( name ) {
+					return {
+						name: name,
+						teardown: function( autosave ) {
+							ok( autosave instanceof $.Autosave, "Teardown called for " + this.name );
+							expects++;
+						}
+					};
+				})
+			});
+
+		function hasher( data ) {
+			return data.name;
+		}
+
+		$.each( data, function( index, datum ) {
+			var hash = $.makeArray( datum ).join( ", " );
+
+			instance[ "removeHandler" + ( $.isArray( datum ) ? "s" : "" ) ]( datum );
+
+			ok( !( new RegExp( hash ).test( utils.getHash( instance, hasher ) ) ), "Removed " + hash );
+		});
+
+		expect( data.length + expects );
 	});
 });
