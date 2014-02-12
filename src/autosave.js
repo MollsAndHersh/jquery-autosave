@@ -150,9 +150,9 @@ $.extend( Autosave.prototype, {
 		return handlers;
 	},
 
-	getInputs: function( inputs ) {
-		return ( inputs ? $( inputs ) : this.$element )
-			.andSelf().find( ":input" ).not( this.options.ignore );
+	getInput: function( selector ) {
+		var $inputs = ( selector ? $( selector ) : this.$element ).find( ":input" );
+		return ( $inputs.length ? $inputs : $inputs.end().filter( ":input" ) ).not( this.options.ignore );
 	},
 
 	getOption: function( key ) {
@@ -213,6 +213,7 @@ $.extend( Autosave.prototype, {
 $.each([
 	"addHandler",
 	"getHandler",
+	"getInput",
 	"getOption",
 	"removeHandler"
 ], function( index, name ) {

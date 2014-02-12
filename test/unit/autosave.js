@@ -310,6 +310,21 @@ define( [ "jquery-bridge", "testutils" ], function( $, utils ) {
 		expect( tests.length );
 	});
 
+	test( "getInput(s)", function() {
+		var instance = new $.Autosave( "#qunit-fixture" ),
+			tests = [
+				[ undefined, 11 ],
+				[ ":input", 11 ],
+				[ "[name=text]", 1 ]
+			];
+
+		$.each( tests, function( index, test ) {
+			equal( instance.getInputs( test[ 0 ] ).length, test[ 1 ], "Got " + test[ 1 ] + " inputs." );
+		});
+
+		expect( tests.length );
+	});
+
 	test( "getOption(s)", function() {
 		var tests = {
 				handler: { name: "handler" },
