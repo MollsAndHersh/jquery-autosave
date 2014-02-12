@@ -56,11 +56,11 @@ define( [ "jquery-bridge", "testutils" ], function( $, utils ) {
 		};
 
 	function elementHasClass() {
-		return this.instance.getElement().hasClass( 'autosave' );
+		return this.instance.getElement().hasClass( "autosave" );
 	}
 
 	function getElementData() {
-		return this.instance.getElement().data( 'autosave' );
+		return this.instance.getElement().data( "autosave" );
 	}
 
 	function getElementLength() {
@@ -128,14 +128,14 @@ define( [ "jquery-bridge", "testutils" ], function( $, utils ) {
 				cases: [
 					{
 						actual: function() {
-							return this.instance.getOption( 'change' ) === change;
+							return this.instance.getOption( "change" ) === change;
 						},
 						assert: ok,
 						message: "Custom change function used."
 					},
 					{
 						actual: function () {
-							return this.instance.getOption( 'ready' ) === ready;
+							return this.instance.getOption( "ready" ) === ready;
 						},
 						assert: ok,
 						message: "Custom ready function used."
