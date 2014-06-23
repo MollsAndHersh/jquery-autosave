@@ -1,71 +1,72 @@
+/* start-build-ignore */
 define( [
 	"jquery",
-	"handler",
-	"namespacer",
-	"sequence"
+	"src/namespacer",
+	"vendor/fixture",
+	"vendor/jquery.deferred.sequence"
 ], function(
 	$,
-	Handler,
 	namespacer,
-	Sequence
+	Fixture
 ) {
+/* end-build-ignore */
 
-function Autosave( element, options ) {
-	var classNames, eventNames, handlers;
+function Autosave( elements, options ) {
+	var classNames, eventNames, fixtures;
 
 	// Allow calling without the 'new' operator
 	if ( !( this instanceof Autosave ) ) {
-		return new Autosave( element, options );
+		return new Autosave( elements, options );
 	}
 
 	// Allow omission of element argument
-	if ( $.isPlainObject( element ) ) {
-		options = element;
-		element = undefined;
+	if ( $.isPlainObject( elements ) ) {
+		options = elements;
+		elements = undefined;
 	}
 
 	// Options
 	options = $.extend( true, {}, Autosave.options, options );
 	classNames = namespacer( options.namespace, [ "change" ], "-", true );
 	eventNames = namespacer( options.namespace, [ "change", "keyup" ] );
-	handlers = options.handler || options.handlers;
+	fixtures = options.fixture || options.fixtures;
 
 	// Properties
 	this.classNames = classNames;
 	this.eventNames = eventNames;
-	this.handlers = {};
+	this.fixtures = {};
 	this.options = options;
 
 	// Initialization
-	this.attach( element );
-	this.addHandler( handlers ).done( options.ready );
+	this.attach( elements );
+	this.addFixture( fixtures ).done( options.ready );
 }
 
 $.extend( Autosave.prototype, {
-	addHandler: function( mixed ) {
-		var handler,
+	addFixture: function( mixed ) {
+		var fixture,
 			self = this;
 
-		return new Sequence( mixed ).reduce(function( item ) {
-			handler = Handler.create( item );
+		return new $.Deferred.Sequence( mixed ).reduce(function( item ) {
+			fixture = Fixture.create( item );
 
-			if ( handler ) {
-				return $.when( handler.setup( self ) ).done(function() {
-					self.handlers[ handler.uuid ] = handler;
+			if ( fixture ) {
+				return $.when( fixture.attach( self ) ).done(function() {
+					self.fixtures[ fixture.uuid ] = fixture;
 				});
 			}
 		});
 	},
 
-	attach: function( element ) {
-		var $element = $( element || [] ),
+	attach: function( elements ) {
+		var $elements = $( elements || [] ),
 			self = this;
 
-		( this.$element ? this.$element.add( $element ) : ( this.$element = $element ) )
+		( this.$elements ? this.$elements.add( $elements ) : ( this.$elements = $elements ) )
 			.addClass( this.options.namespace )
 			.data( this.options.namespace, this );
 
-		// TODO: move this into a Handler
+		// TODO: move this into a Fixture
 		// FIXME: https://github.com/nervetattoo/jquery-autosave/issues/18
 		this.getInputs().on( this.eventNames.change + " " + this.eventNames.keyup, function( event ) {
 			var $target = $( event.target );
@@ -84,34 +85,36 @@ $.extend( Autosave.prototype, {
 	},
 
 	destroy: function() {
-		return this.removeHandlers( this.getHandlers() )
+		return this.removeFixtures( this.getFixtures() )
 			.done( $.proxy( this.detach, this ) );
 	},
 
 	detach: function() {
-		this.$element
+		this.$elements
 			.removeClass( this.options.namespace )
 			.removeData( this.options.namespace );
 
-		this.$element = $( [] );
+		this.$elements = $( [] );
 
-		// TODO: move this into a handler
+		// TODO: move this into a fixture
 		this.getInputs().off( this.options.namespace );
 	},
 
 	getElement: function() {
-		return this.$element;
+		return this.$elements;
 	},
 
-	getHandler: function( mixed ) {
-		var handler, item, key, type,
+	getFixture: function( mixed ) {
+		var fixture, item, key, type,
 			i = 0,
-			handlers = [];
+			fixtures = [];
 
 		if ( mixed == null ) {
-			return $.map( this.handlers, function( handler ) {
-				return handler;
-			});
+			for ( key in this.fixtures ) {
+				fixtures.push( this.fixtures[ key ] );
+			}
+
+			return fixtures;
 		}
 
 		mixed = $.makeArray( mixed );
@@ -126,34 +129,34 @@ $.extend( Autosave.prototype, {
 			type = typeof item;
 
 			if ( type === "number" ) {
-				handler = this.handlers[ item ];
+				fixture = this.fixtures[ item ];
 
-				if ( handler ) {
-					handlers.push( handler );
+				if ( fixture ) {
+					fixtures.push( fixture );
 				}
 
 			} else if ( type === "string" ) {
-				for ( key in this.handlers ) {
-					handler = this.handlers[ key ];
+				for ( key in this.fixtures ) {
+					fixture = this.fixtures[ key ];
 
 					if (
-						typeof handler.name === "string" &&
-						new RegExp( item + "(?:\\.|$)" ).test( handler.name )
+						typeof fixture.name === "string" &&
+						new RegExp( item + "(?:\\.|$)" ).test( fixture.name )
 					) {
-						handlers.push( handler );
+						fixtures.push( fixture );
 					}
 				}
 
-			} else if ( Handler.isHandler( item ) && item.equals( this.handlers[ item.uuid ] ) ) {
-				handlers.push( item );
+			} else if ( Fixture.isFixture( item ) && item.equals( this.fixtures[ item.uuid ] ) ) {
+				fixtures.push( item );
 			}
 		}
 
-		return handlers;
+		return fixtures;
 	},
 
 	getInput: function( selector ) {
-		var $inputs = ( selector ? $( selector ) : this.$element ).find( ":input" );
+		var $inputs = ( selector ? $( selector ) : this.$elements ).find( ":input" );
 		return ( $inputs.length ? $inputs : $inputs.end().filter( ":input" ) ).not( this.options.ignore );
 	},
 
@@ -162,7 +165,7 @@ $.extend( Autosave.prototype, {
 	},
 
 /*
-	// TODO: move this into a Handler
+	// TODO: move this into a Fixture
 	interval: function( interval, callback ) {
 		if ( this.timer ) {
 			clearTimeout( this.timer );
@@ -174,19 +177,19 @@ $.extend( Autosave.prototype, {
 		}
 	},
 */
-	removeHandler: function( mixed ) {
+	removeFixture: function( mixed ) {
 		var self = this,
-			sequence = new Sequence( this.getHandlers( mixed ) );
+			sequence = new $.Deferred.Sequence( this.getFixtures( mixed ) );
 
-		return sequence.reduce(function( handler ) {
-			return $.when( handler.teardown( self ) ).done(function() {
-				delete self.handlers[ handler.uuid ];
+		return sequence.reduce(function( fixture ) {
+			return $.when( fixture.detach( self ) ).done(function() {
+				delete self.fixtures[ fixture.uuid ];
 			});
 		});
 	},
 
 	save: function( event, inputs, data ) {
-		var sequence = new Sequence( this.getHandlers() );
+		var sequence = new $.Deferred.Sequence( this.getFixtures() );
 
 		// Args: inputs, data
 		if ( !( event instanceof $.Event ) ) {
@@ -199,10 +202,10 @@ $.extend( Autosave.prototype, {
 			data: data,
 			event: event,
 			inputs: this.getInputs( inputs )
-		}, function( handler, data ) {
+		}, function( fixture, data ) {
 			var dfd = $.Deferred();
 
-			$.when( handler.run( data ) ).done(function( response ) {
+			$.when( fixture.interact( data ) ).done(function( response ) {
 				dfd.resolve( response !== undefined ? response : data );
 			}).fail( sequence.master.reject );
 
@@ -213,29 +216,30 @@ $.extend( Autosave.prototype, {
 
 // Add the plural form of applicable prototype functions
 $.each([
-	"addHandler",
-	"getHandler",
+	"addFixture",
+	"getElement",
+	"getFixture",
 	"getInput",
 	"getOption",
-	"removeHandler"
+	"removeFixture"
 ], function( index, name ) {
 	Autosave.prototype[ name + "s" ] = Autosave.prototype[ name ];
 });
 
 // Public Static
 $.extend( Autosave, {
-	Handler: Handler,
 	options: {
 		change: $.noop,
-		handler: null,
+		fixture: null,
 		ignore: ":disabled",
 		namespace: "autosave",
 		ready: $.noop
 	},
-	Sequence: Sequence,
 	version: "<%= pkg.version %>"
 });
 
+/* start-build-ignore */
 return Autosave;
 
 });
+/* end-build-ignore */

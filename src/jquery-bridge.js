@@ -1,4 +1,12 @@
-define( [ "jquery", "autosave" ], function( $, Autosave ) {
+/* start-build-ignore */
+define( [
+	"jquery",
+	"src/autosave"
+], function(
+	$,
+	Autosave
+) {
+/* end-build-ignore */
 
 $.Autosave = Autosave;
 
@@ -8,6 +16,8 @@ $.fn.autosave = function( options ) {
 	});
 };
 
+/* start-build-ignore */
 return $;
 
 });
+/* end-build-ignore */

@@ -1,4 +1,9 @@
-define( [ "jquery" ], function( $ ) {
+define( [
+	"jquery",
+	"vendor/poly/function"
+], function(
+	$
+) {
 	var slice = Function.prototype.call.bind( Array.prototype.slice ),
 		utils = {};
 
@@ -7,10 +12,10 @@ define( [ "jquery" ], function( $ ) {
 		return new ( constructor.bind.apply( constructor, [ null ].concat( args ) ) )();
 	};
 
-	// Generate a hash from an array of handlers or handler-like objects
+	// Generate a hash from an array of fixtures or fixture-like objects
 	utils.getHash = function( obj, callback ) {
 		return $.map(
-			obj instanceof $.Autosave ? obj.getHandlers() : $.makeArray( obj ), callback
+			obj instanceof $.Autosave ? obj.getFixtures() : $.makeArray( obj ), callback
 		).join( ", " );
 	};
 

@@ -1,46 +1,14 @@
 <html>
   <head>
-  <title>jQuery.autosave Examples</title>
+    <title>jQuery.autosave Examples</title>
 
-  <link type="text/css" rel="stylesheet" href="styles.css" />
+    <meta name="description" content="A jQuery plugin that can automatically
+    and unobtrusively save form data based on customly defined criteria.">
 
-  <script type="text/javascript" src="../bower_components/jquery/jquery.js"></script>
-  <script type="text/javascript" src="../dist/jquery.autosave.js"></script>
+    <meta name="keywords" content="form, javascript, jquery, asynchronous,
+    promise pattern, fixtures, save, store, data, state">
 
-  <script type="text/javascript">
-    jQuery(function( $ ) {
-        var example = $( "#example1" );
-
-        example.autosave({
-            handlers: [
-                // Reduce inputs to type=text
-                function( state ) {
-                    state.inputs = state.inputs.filter( ":text" );
-                },
-                // Serialize inputs
-                function( state ) {
-                    var dfd = $.Deferred();
-
-                    setTimeout(function() {
-                        state.data = state.inputs.serialize();
-                        dfd.resolve(state);
-                    }, 1000);
-
-                    return dfd;
-                }
-            ],
-            ready: function() {
-                console.log( "ready" );
-            }
-        }).find( "[type=text]" ).val( "text" );
-
-        example.data( "autosave" ).save().done(function( response ) {
-            console.log( "done:", response );
-        }).fail(function( message ) {
-            console.log( "failed: " + message );
-        });
-    });
-  </script>
+    <link type="text/css" rel="stylesheet" href="styles.css" />
   </head>
   <body>
     <h1>jQuery.autosave Examples</h1>
@@ -50,7 +18,7 @@
       <ol class="example">
         <li>
           <h4>Text</h4>
-          <input name="text" type="text" value="" />
+          <input name="text" type="text" value="">
         </li>
         <li>
           <h4>Textarea</h4>
@@ -59,17 +27,17 @@
         <li>
           <h4>Radio Group</h4>
           <span class="group">
-            <label class="radio"><input name="radio" type="radio" value="1" />1</label>
-            <label class="radio"><input name="radio" type="radio" value="2" />2</label>
-            <label class="radio"><input name="radio" type="radio" value="3" />3</label>
+            <label class="radio"><input name="radio" type="radio" value="1">1</label>
+            <label class="radio"><input name="radio" type="radio" value="2">2</label>
+            <label class="radio"><input name="radio" type="radio" value="3">3</label>
           </span>
         </li>
         <li>
           <h4>Checkbox Group</h4>
           <span class="group">
-            <label class="checkbox"><input name="checkbox" type="checkbox" value="1" />1</label>
-            <label class="checkbox"><input name="checkbox" type="checkbox" value="2" />2</label>
-            <label class="checkbox"><input name="checkbox" type="checkbox" value="3" />3</label>
+            <label class="checkbox"><input name="checkbox" type="checkbox" value="1">1</label>
+            <label class="checkbox"><input name="checkbox" type="checkbox" value="2">2</label>
+            <label class="checkbox"><input name="checkbox" type="checkbox" value="3">3</label>
           </span>
         </li>
         <li>
@@ -94,9 +62,20 @@
     </form>
 
     <form name="example2" id="example2">
-      <input name="text2" type="text" value="" />
+      <input name="text2" type="text" value="">
     </form>
 
     <button type="button" name="save">Save</button>
+
+    <!--
+    jQuery.autosave can also be loaded synchronously:
+
+    <script src="../vendor/fixture.js"></script>
+    <script src="../vendor/jquery.js"></script>
+    <script src="../vendor/jquery.deferred.sequence.js"></script>
+    <script src="../dist/jquery.autosave.js"></script>
+    -->
+
+    <script src="../vendor/require.js" data-main="examples.js"></script>
   </body>
 </html>

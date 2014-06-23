@@ -1,18 +1,54 @@
+/* jshint camelcase: false */
 module.exports = function( grunt ) {
-    var rDefineBegin = /^define\([^{]*?{\s*/,
-        rDefineEnd = /\}\);\s*$/,
-        rModuleExport = /\s*return\s+[^}]+(\}\);\s*)$/;
-
-    // Strip out AMD definitions on build
-    function processBuildContents( name, path, contents ) {
-        return contents
-            .replace( rModuleExport, "$1" )
-            .replace( rDefineBegin, "" )
-            .replace( rDefineEnd, "\n" );
-    }
-
     grunt.config.init({
         pkg: grunt.file.readJSON( "package.json" ),
+
+        // Front-end dependency management
+        bowercopy: {
+            vendor: {
+                options: {
+                    destPrefix: "vendor"
+                },
+                files: {
+                    "fixture.js": "fixture/dist/fixture.js",
+                    "jquery.js": "jquery/dist/jquery.js",
+                    "jquery.deferred.sequence.js": "jquery-deferred-sequence/jquery.deferred.sequence.js",
+                    "poly/lib": "poly/lib/*",
+                    "poly/function.js": "poly/function.js",
+                    "qunit": "qunit/qunit/*",
+                    "require.js": "requirejs/require.js"
+                }
+            }
+        },
+
+        // Version management
+        bump: {
+            options: {
+                commitFiles: [
+                    "dist/*",
+                    "bower.json",
+                    "package.json"
+                ],
+                files: [
+                    "bower.json",
+                    "package.json"
+                ],
+                pushTo: "origin master",
+                tagName: "%VERSION%",
+                updateConfigs: [ "pkg" ]
+            }
+        },
+
+        // Clean up files and folders before build
+        clean: {
+            dependencies: [
+                "bower_components",
+                "vendor"
+            ],
+            build: [
+                "dist"
+            ]
+        },
 
         // TODO
         //jscs: {},
@@ -47,13 +83,16 @@ module.exports = function( grunt ) {
         requirejs: {
             compile: {
                 options: {
-                    baseUrl: "./src",
-                    name: "jquery-bridge",
-                    onBuildWrite: processBuildContents,
+                    baseUrl: "./",
+                    exclude: [
+                        "vendor/fixture",
+                        "vendor/jquery.deferred.sequence"
+                    ],
+                    name: "src/jquery-bridge",
                     optimize: "none",
                     out: "dist/jquery.autosave.js",
                     paths: {
-                        jquery: "empty:"
+                        "jquery": "empty:"
                     },
                     skipSemiColonInsertion: true,
                     wrap: {
@@ -64,13 +103,24 @@ module.exports = function( grunt ) {
             }
         },
 
+        // Remove development-only code segments (mostly AMD stuff)
+        strip_code: {
+            build: {
+                options: {
+                    start_comment: "start-build-ignore",
+                    end_comment: "end-build-ignore"
+                },
+                src: "dist/jquery.autosave.js"
+            }
+        },
+
         // JavaScript minification for distribution files.
         uglify: {
             options: {
-                mangle: false,
-                preserveComments: "some"
+                banner: grunt.file.read( "build/banner.jst" ),
+                preserveComments: false
             },
-            basic: {
+            dist: {
                 src: "<%= requirejs.compile.options.out %>",
                 dest: "dist/<%= pkg.name %>.min.js"
             }
@@ -98,22 +148,44 @@ module.exports = function( grunt ) {
     });
 
     // Load plugins from npm
-    grunt.task.loadNpmTasks( "grunt-contrib-jshint" );
-    grunt.task.loadNpmTasks( "grunt-contrib-qunit" );
-    grunt.task.loadNpmTasks( "grunt-contrib-requirejs" );
-    grunt.task.loadNpmTasks( "grunt-contrib-uglify" );
-    grunt.task.loadNpmTasks( "grunt-contrib-watch" );
+    grunt.loadNpmTasks( "grunt-bowercopy" );
+    grunt.loadNpmTasks( "grunt-contrib-clean" );
+    grunt.loadNpmTasks( "grunt-contrib-jshint" );
+    grunt.loadNpmTasks( "grunt-contrib-qunit" );
+    grunt.loadNpmTasks( "grunt-contrib-requirejs" );
+    grunt.loadNpmTasks( "grunt-contrib-uglify" );
+    grunt.loadNpmTasks( "grunt-contrib-watch" );
+    grunt.loadNpmTasks( "grunt-strip-code" );
 
-    // Dev build
-    grunt.task.registerTask( "default", [
+    // Dev
+    grunt.registerTask( "default", [
         "jshint",
         "qunit"
-    ]);
+    ] );
 
-    // Production ready build
-    grunt.task.registerTask( "build", [
+    // Dependencies
+    grunt.registerTask( "dependencies", [
+        "clean:dependencies",
+        "bowercopy"
+    ] );
+
+    // Build
+    grunt.registerTask( "build", [
         "default",
+        "dependencies",
+        "clean:build",
         "requirejs",
+        "strip_code",
         "uglify"
-    ]);
+    ] );
+
+    // Release
+    grunt.registerTask( "release", function() {
+        var type = this.args.shift() || "patch";
+        grunt.task.run( [
+            "bump:" + type + ":bump-only",
+            "build",
+            "bump:" + type + ":commit-only"
+        ] );
+    });
 };

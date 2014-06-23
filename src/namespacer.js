@@ -1,4 +1,6 @@
+/* start-build-ignore */
 define(function() {
+/* end-build-ignore */
 
 function namespacer( namespace, items, separator, before ) {
 	var i, item,
@@ -21,6 +23,8 @@ function namespacer( namespace, items, separator, before ) {
 	return namespaced;
 }
 
+/* start-build-ignore */
 return namespacer;
 
 });
+/* end-build-ignore */

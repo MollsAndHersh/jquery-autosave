@@ -1,8 +1,16 @@
-define( [ "jquery-bridge", "testutils" ], function( $, utils ) {
+define( [
+    "src/jquery-bridge",
+    "test/testutils",
+    "vendor/fixture"
+], function(
+	$,
+	utils,
+	Fixture
+) {
 	var autosaveFactory = utils.constructorApply.bind( null, $.Autosave ),
 		elementExistsCase = {
 			actual: function() {
-				return this.instance.getElement() instanceof jQuery;
+				return this.instance.getElement() instanceof $;
 			},
 			expected: true,
 			message: "Element is attached."
@@ -69,7 +77,7 @@ define( [ "jquery-bridge", "testutils" ], function( $, utils ) {
 
 	module( "Autosave", {
 		setup: function() {
-			$.Autosave.Handler.prototypes = {};
+			Fixture.remove(Fixture.list());
 		}
 	});
 
@@ -83,8 +91,8 @@ define( [ "jquery-bridge", "testutils" ], function( $, utils ) {
 
 		function change() {}
 
-		function getHandlers() {
-			return this.instance.getHandlers();
+		function getFixtures() {
+			return this.instance.getFixtures();
 		}
 
 		function getOptions() {
@@ -103,7 +111,7 @@ define( [ "jquery-bridge", "testutils" ], function( $, utils ) {
 						assert: deepEqual,
 						expected: {
 							change: $.noop,
-							handler: null,
+							fixture: null,
 							ignore: ":disabled",
 							namespace: "autosave",
 							ready: $.noop
@@ -111,10 +119,10 @@ define( [ "jquery-bridge", "testutils" ], function( $, utils ) {
 						message: "Default options used."
 					},
 					{
-						actual: getHandlers,
+						actual: getFixtures,
 						assert: deepEqual,
 						expected: [],
-						message: "Handlers array exists and is empty."
+						message: "Fixtures array exists and is empty."
 					}
 				]
 			},
@@ -155,12 +163,12 @@ define( [ "jquery-bridge", "testutils" ], function( $, utils ) {
 		expect( totalExpects );
 	});
 
-	test( "addHandler(s)", function() {
+	test( "addFixture(s)", function() {
 		var instance,
 			data = [
-				"handler1",
-				"handler2",
-				[ "handler3", "handler4" ]
+				"fixture1",
+				"fixture2",
+				[ "fixture3", "fixture4" ]
 			],
 			expects = 0,
 			tests = utils.map( data, function( name ) {
@@ -181,10 +189,10 @@ define( [ "jquery-bridge", "testutils" ], function( $, utils ) {
 			var hash = utils.getHash( test, hasher );
 
 			if ( index === 0 ) {
-				instance = new $.Autosave({ handler: test });
+				instance = new $.Autosave({ fixture: test });
 
 			} else {
-				instance[ "addHandler" + ( $.isArray( test ) ? "s" : "" ) ]( test );
+				instance[ "addFixture" + ( $.isArray( test ) ? "s" : "" ) ]( test );
 			}
 
 			ok( new RegExp( hash + "$" ).test( utils.getHash( instance, hasher ) ), "Added " + hash );
@@ -209,14 +217,14 @@ define( [ "jquery-bridge", "testutils" ], function( $, utils ) {
 
 	test( "destroy", function() {
 		var instance = new $.Autosave( "#qunit-fixture", {
-			handlers: [
+			fixtures: [
 				{
-					teardown: function() {
+					detach: function() {
 						ok( true, "Teardown called." );
 					}
 				},
 				{
-					teardown: function() {
+					detach: function() {
 						var dfd = $.Deferred();
 						setTimeout(function() {
 							ok( true, "Deferred teardown called." );
@@ -282,31 +290,31 @@ define( [ "jquery-bridge", "testutils" ], function( $, utils ) {
 		expect( expects );
 	});
 
-	test( "getHandler(s)", function() {
+	test( "getFixture(s)", function() {
 		var instance = new $.Autosave({
-				handlers: [
-					new $.Autosave.Handler({ name: "handlerfoo" }),
-					{ name: "handler" },
-					{ name: "handler.foo" }
+				fixtures: [
+					new Fixture({ name: "fixturefoo" }),
+					{ name: "fixture" },
+					{ name: "fixture.foo" }
 				]
 			}),
-			handlers = instance.getHandlers(),
+			fixtures = instance.getFixtures(),
 			tests = [
-				[ undefined, "handlerfoo, handler, handler.foo" ],
-				[ null, "handlerfoo, handler, handler.foo" ],
-				[ handlers[ 1 ].uuid, "handler" ],
-				[ "handler", "handler, handler.foo" ],
-				[ "handler.foo", "handler.foo" ],
-				[ "handlerfoo", "handlerfoo" ],
-				[ handlers[ 0 ], "handlerfoo" ]
+				[ undefined, "fixturefoo, fixture, fixture.foo" ],
+				[ null, "fixturefoo, fixture, fixture.foo" ],
+				[ fixtures[ 1 ].uuid, "fixture" ],
+				[ "fixture", "fixture, fixture.foo" ],
+				[ "fixture.foo", "fixture.foo" ],
+				[ "fixturefoo", "fixturefoo" ],
+				[ fixtures[ 0 ], "fixturefoo" ]
 			];
 
-		function hasher( handler ) {
-			return handler.name;
+		function hasher( fixture ) {
+			return fixture.name;
 		}
 
 		$.each( tests, function( index, test ) {
-			equal( utils.getHash( instance.getHandlers( test[ 0 ] ), hasher ), test[ 1 ], "Got " + test[ 1 ] );
+			equal( utils.getHash( instance.getFixtures( test[ 0 ] ), hasher ), test[ 1 ], "Got " + test[ 1 ] );
 		});
 
 		expect( tests.length );
@@ -329,13 +337,13 @@ define( [ "jquery-bridge", "testutils" ], function( $, utils ) {
 
 	test( "getOption(s)", function() {
 		var tests = {
-				handler: { name: "handler" },
+				fixture: { name: "fixture" },
 				ignore: ".ignore",
 				namespace: "myNamespace",
 				ready: function() {}
 			},
 			instance = new $.Autosave({
-				handler: tests.handler,
+				fixture: tests.fixture,
 				ignore: tests.ignore,
 				namespace: tests.namespace,
 				ready: tests.ready
@@ -350,15 +358,15 @@ define( [ "jquery-bridge", "testutils" ], function( $, utils ) {
 		expect( utils.objectLength( tests ) + 1 );
 	});
 
-	test( "removeHandler(s)", function() {
+	test( "removeFixture(s)", function() {
 		var data = [
-				"handler1",
-				"handler2",
-				[ "handler3", "handler4" ]
+				"fixture1",
+				"fixture2",
+				[ "fixture3", "fixture4" ]
 			],
 			expects = 0,
 			instance = $.Autosave({
-				handlers: utils.map( $.map( data, function( value ) {
+				fixtures: utils.map( $.map( data, function( value ) {
 					return value;
 
 				}), function( name ) {
@@ -379,7 +387,7 @@ define( [ "jquery-bridge", "testutils" ], function( $, utils ) {
 		$.each( data, function( index, datum ) {
 			var hash = $.makeArray( datum ).join( ", " );
 
-			instance[ "removeHandler" + ( $.isArray( datum ) ? "s" : "" ) ]( datum );
+			instance[ "removeFixture" + ( $.isArray( datum ) ? "s" : "" ) ]( datum );
 
 			ok( !( new RegExp( hash ).test( utils.getHash( instance, hasher ) ) ), "Removed " + hash );
 		});

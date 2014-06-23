@@ -1,6 +1,6 @@
 {
 	"name": "jquery-autosave",
-	"version": "2.0.0-rc1",
+	"version": "2.0.0-1",
 	"main": [
 		"dist/jquery.autosave.js",
 		"dist/jquery.autosave.min.js"
@@ -15,10 +15,13 @@
 		"test"
 	],
 	"dependencies": {
-		"jquery": "~2.0.0"
+		"fixture": "~1.2.0",
+		"jquery": "~2.1.0",
+		"jquery-deferred-sequence": "~1.0.0"
 	},
 	"devDependencies": {
 		"qunit": "~1.12.0",
+		"poly": "~0.6.0",
 		"requirejs": "~2.1.9"
 	},
 	"keywords": [
