@@ -1,7 +1,4 @@
-# This file is for unifying the coding style for different editors and IDEs.
-# This project follows the jQuery style guide.
 # http://editorconfig.org
-# http://contribute.jquery.org/style-guide/js/
 
 # This is the top-most configuration file.
 root = true
@@ -11,9 +8,10 @@ root = true
 [*]
 end_of_line = lf
 charset = utf-8
-trim_trailing_whitespace = true
+indent_style = space
+indent_size = 2
 insert_final_newline = true
 
-# JavaScript and JSON
-{**.js,**.jshintrc,**.json}
-indent_style = tab
+# Allow trailing whitespace in Markdown files (it's part of the syntax)
+[*.md]
+trim_trailing_whitespace = false

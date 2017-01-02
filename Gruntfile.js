@@ -11,7 +11,7 @@ module.exports = function( grunt ) {
                 },
                 files: {
                     "fixture.js": "fixture/dist/fixture.js",
-                    "jquery.js": "jquery/dist/jquery.js",
+                    "jquery.js": "jquery/jquery.js",
                     "jquery.deferred.sequence.js": "jquery-deferred-sequence/jquery.deferred.sequence.js",
                     "poly/lib": "poly/lib/*",
                     "poly/function.js": "poly/function.js",
@@ -171,9 +171,9 @@ module.exports = function( grunt ) {
 
     // Build
     grunt.registerTask( "build", [
-        "default",
         "dependencies",
         "clean:build",
+        "default",
         "requirejs",
         "strip_code",
         "uglify"

@@ -12,11 +12,16 @@ define( [
 		return new ( constructor.bind.apply( constructor, [ null ].concat( args ) ) )();
 	};
 
+	utils.defining = function() {
+		var args = utils.slice( arguments, 0 );
+		var lastIndex = args.length - 1;
+		var func = args[ lastIndex ];
+		return func.apply( null, args.splice( 0, lastIndex ) );
+	};
+
 	// Generate a hash from an array of fixtures or fixture-like objects
 	utils.getHash = function( obj, callback ) {
-		return $.map(
-			obj instanceof $.Autosave ? obj.getFixtures() : $.makeArray( obj ), callback
-		).join( ", " );
+		return $.map($.makeArray( obj ), callback).join( ", " );
 	};
 
 	// Process a set of data against a callback and generate a new set of data
@@ -53,49 +58,7 @@ define( [
 		return $.isFunction( mixed ) ? mixed.apply( context, slice( arguments, 2 ) ) : mixed;
 	};
 
-	// Run tests against a factory instance
-	utils.runFactoryTests = function( factory, tests, message ) {
-		var expects = 0,
-			current = {};
-
-		$.each( tests, function( testIndex, test ) {
-			var cases = test.cases || [];
-
-			current.instance = factory( test.args );
-			current.test = $.extend( {}, test );
-			current.test.index = testIndex;
-
-			utils.process( test.setup, current );
-
-			$.each( cases, function( testCaseIndex, testCase ) {
-				var args,
-					assert = testCase.assert || equal;
-
-				current.testCase = $.extend( {}, testCase );
-				current.testCase.index = testCaseIndex;
-				current.testCase.actual = utils.process( testCase.actual, current );
-				current.testCase.expected = utils.process( testCase.expected, current );
-				current.testCase.message = utils.process( testCase.message, current );
-
-				if ( message ) {
-					current.testCase.message = utils.process( message, current );
-				}
-
-				args = [ current.testCase.actual, current.testCase.expected, current.testCase.message ];
-				if ( assert === ok ) {
-					args.splice( 1, 1 );
-				}
-
-				assert.apply( QUnit, args );
-			});
-
-			utils.process( test.teardown, current );
-
-			expects += cases.length;
-		});
-
-		return expects;
-	};
+	utils.slice = slice;
 
 	return utils;
 });

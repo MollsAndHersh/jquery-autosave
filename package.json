@@ -10,16 +10,7 @@
     "type": "git",
     "url": "https://github.com/kflorence/jquery-autosave.git"
   },
-  "licenses": [
-    {
-      "type": "BSD",
-      "url": "https://raw.github.com/kflorence/jquery-autosave/master/license-bsd"
-    },
-    {
-      "type": "MIT",
-      "url": "https://raw.github.com/kflorence/jquery-autosave/master/license-mit"
-    }
-  ],
+  "licenses": "(BSD OR MIT)",
   "dependencies": {},
   "description": "Periodically saves form data based on a set of critera.",
   "keywords": [
@@ -41,12 +32,12 @@
     "grunt-contrib-clean": "~0.5.0",
     "grunt-contrib-jshint": "~0.8.0",
     "grunt-contrib-qunit": "~0.3.0",
-    "grunt-contrib-requirejs": "~0.4.1",
+    "grunt-contrib-requirejs": "~1.0.0",
     "grunt-contrib-uglify": "~0.5.0",
     "grunt-contrib-watch": "~0.5.3",
     "grunt-jscs-checker": "~0.2.6",
     "grunt-jsonlint": "~1.0.4",
     "grunt-strip-code": "~0.1.2",
-    "requirejs": "~2.1.9"
+    "requirejs": "~2.3.2"
   }
 }

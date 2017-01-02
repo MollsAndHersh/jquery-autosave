@@ -1,15 +1,15 @@
 (function() {
-	var units = [
-		"test/unit/autosave"
-	];
-
 	require.config({
 		baseUrl: "../",
 		paths: {
-			"jquery": "vendor/jquery"
+			"jquery": "vendor/jquery",
+      "qunit": "vendor/qunit/qunit"
 		}
 	});
 
 	// Defer QUnit test runner until all tests have loaded
-	require( units, QUnit.start );
+	require(["qunit", "test/unit/autosave"], function(QUnit, tests) {
+    tests();
+    QUnit.start();
+  });
 })();

@@ -9,24 +9,25 @@
     <h2 id="qunit-banner"></h2>
     <h2 id="qunit-userAgent"></h2>
     <ol id="qunit-tests"></ol>
+
     <div id="qunit-fixture">
       <form name="testForm1" id="testForm1">
         <input name="hidden" type="hidden">
-        <input name="text" type="text" value="">
-        <textarea name="textarea"></textarea>
+        <input name="text" title="text" type="text" value="">
+        <textarea name="textarea" title="textarea"></textarea>
         <label class="radio"><input name="radio" type="radio" value="1">1</label>
         <label class="radio"><input name="radio" type="radio" value="2">2</label>
         <label class="radio"><input name="radio" type="radio" value="3">3</label>
         <label class="checkbox"><input name="checkbox" type="checkbox" value="1">1</label>
         <label class="checkbox"><input name="checkbox" type="checkbox" value="2">2</label>
         <label class="checkbox"><input name="checkbox" type="checkbox" value="3">3</label>
-        <select name="select">
+        <select name="select" title="select">
           <option value=""></option>
           <option value="1">1</option>
           <option value="2">2</option>
           <option value="3">3</option>
         </select>
-        <select name="multi-select" multiple="multiple">
+        <select name="multi-select" multiple="multiple" title="select multiple">
           <option value=""></option>
           <option value="1">1</option>
           <option value="2">2</option>
@@ -36,8 +37,6 @@
       </form>
     </div>
 
-    <script src="../vendor/qunit/qunit.js"></script>
-    <script>QUnit.config.autostart = false;</script>
     <script src="../vendor/require.js" data-main="testrunner.js"></script>
   </body>
 </html>
