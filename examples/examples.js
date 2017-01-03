@@ -4,21 +4,50 @@
 	require.config({
 		baseUrl: "../",
 		paths: {
-			"fixture": "vendor/fixture",
 			"jquery": "vendor/jquery"
 		}
 	});
 
 	require( [
 		"jquery",
-		"fixture",
+		"vendor/fixture",
 		"vendor/jquery.deferred.sequence",
-		"dist/jquery.autosave"
-	], function( $ ) {
+		"src/jquery-bridge"
+	], function( $, Fixture ) {
         var example = $( "#example1" );
+
+        // Need to store custom autosave fixtures somewhere out of global scope
+        Fixture.define("trigger.onEvent", function() {
+          return {
+            data: {
+              eventName: "change"
+            },
+            attach: function(autosave) {
+              var self = this;
+              var eventName = this.data.eventName;
+
+              // https://mathiasbynens.be/notes/oninput
+              // http://caniuse.com/#feat=input-event
+              if (eventName == "input") {
+
+              }
+
+              eventName = eventName + "." + autosave.getOption("namespace");
+              var selector = "." + autosave.getUuid() + ":input, ." + autosave.getUuid() + " :input";
+
+              $("body").on(eventName, selector, function(event) {
+                console.log("event fired: " + self.data.eventName);
+                autosave.save(event, event.target);
+              });
+
+              console.log("trigger.onEvent attached");
+            }
+          };
+        }());
 
         example.autosave({
             fixtures: [
+                { name: "trigger.onEvent", data: { eventName: "keyup" } },
                 // Reduce inputs to type=text
                 function( state ) {
                     state.inputs = state.inputs.filter( ":text" );
@@ -33,18 +62,18 @@
                     }, 1000);
 
                     return dfd;
+                },
+                // Log result
+                function(state) {
+                  console.log(state);
                 }
             ],
             ready: function() {
                 console.log( "ready" );
             }
-        }).find( "[type=text]" ).val( "text" );
-
-        example.data( "autosave" ).save().done(function( response ) {
-            console.log( "done:", response );
-
-        }).fail(function( message ) {
-            console.log( "failed: " + message );
         });
+
+    // has different classname
+    $("#example2").autosave();
 	});
 })( this );

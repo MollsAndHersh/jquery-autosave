@@ -1,12 +1,12 @@
 *~
-*.diff
-*.patch
+.*
+!.editorconfig
+!.gitignore
+!.jshintrc
+!.jshintignore
 *.sublime*
-.bower.json
-.DS_Store
-.project
-.settings
-.sizecache.json
+*.swp
+*.log
 
 bower_components/
 node_modules/

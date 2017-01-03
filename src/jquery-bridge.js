@@ -11,7 +11,5 @@ $.fn.autosave = function(options) {
 };
 
 /* start-build-ignore */
-return $;
-
 });
 /* end-build-ignore */

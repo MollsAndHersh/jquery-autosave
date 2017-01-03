@@ -1,73 +1,51 @@
 /* start-build-ignore */
 define([
   "jquery",
-  "src/namespacer",
   "vendor/fixture",
   "vendor/jquery.deferred.sequence"
-], function($, namespacer, Fixture) {
+], function($, Fixture) {
 /* end-build-ignore */
 
-function Autosave(elements, options) {
-  var classNames, eventNames, fixtures,
-    $attached = $([]),
+var id = 0;
+
+function Autosave(element, options) {
+  var $element = $([]),
     repository = new Fixture.Repository(),
-    self = this;
+    self = this,
+    uuid = id++;
 
   // Allow calling without the 'new' operator
   if (!(this instanceof Autosave)) {
-    return new Autosave(elements, options);
+    return new Autosave(element, options);
   }
 
   // Allow omission of element argument
-  if ($.isPlainObject(elements)) {
-    options = elements;
-    elements = undefined;
+  if ($.isPlainObject(element)) {
+    options = element;
+    element = undefined;
   }
 
-  // Options
+  // Private properties
   options = $.extend(true, {}, Autosave.options, options);
-  classNames = namespacer(options.namespace, ["change"], "-", true);
-  eventNames = namespacer(options.namespace, ["change", "keyup"]);
-  fixtures = options.fixture || options.fixtures;
 
   /**
    * Attach the given elements to this instance.
-   * @param elements A jQuery selector, a jQuery object, a DOM element or a list of DOM elements.
+   * @param element The form to attach to.
+   * @param fixtures Fixtures to add after attachment.
    */
-  function attach(elements) {
-    var $elements = $(elements);
-
-    if ($elements.length) {
-      $attached = $attached.add($elements).addClass(options.namespace).data(options.namespace, this);
-    }
-
-    // TODO: move this into a Fixture
-    // FIXME: https://github.com/nervetattoo/jquery-autosave/issues/18
-    // this.getInputs().on(this.eventNames.change + " " + this.eventNames.keyup, function(event) {
-    //   var $target = $(event.target);
-    //
-    //   if (
-    //     $target.not(self.options.ignore) &&
-    //     !$target.hasClass(self.classNames.change)
-    //   ) {
-    //     $.when(
-    //       self.options.change.apply($target.get(0), event)
-    //     ).done(function() {
-    //       $target.addClass(self.classNames.change);
-    //     });
-    //   }
-    // });
-
-    return $attached;
+  function attach(element, fixtures) {
+    detach();
+    $element = $(element).addClass(options.namespace + " " + self.getUuid()).data(options.namespace, this);
+    return addFixtures(fixtures);
   }
 
   /**
    * Add fixtures with deferred support.
-   * @param mixed The fixture(s) to add, will be normalized.
+   * @param fixtures The fixture(s) to add.
    * @returns Deferred result.
    */
-  function addFixture(mixed) {
-    return new $.Deferred.Sequence(mixed).reduce(function(item) {
+  function addFixtures(fixtures) {
+    return new $.Deferred.Sequence(fixtures).reduce(function(item) {
       var fixture = Fixture.create(item);
 
       if (fixture) {
@@ -83,12 +61,9 @@ function Autosave(elements, options) {
    * @returns Deferred result.
    */
   function detach() {
-    return removeFixture().done(function() {
-      $attached.removeClass(options.namespace).removeData(options.namespace);
-      $attached = $([]);
-
-      // TODO: move this into a fixture
-      //self.getInputs().off(self.options.namespace);
+    return removeFixtures().done(function() {
+      $element.removeClass(options.namespace + " " + self.getUuid()).removeData(options.namespace);
+      $element = $([]);
     });
   }
 
@@ -96,17 +71,17 @@ function Autosave(elements, options) {
    * Return the elements this instance is attached to.
    * @returns jQuery object of attached elements.
    */
-  function getElement() {
-    return $attached;
+  function getElements() {
+    return $element;
   }
 
   /**
    * Get fixtures from the repository.
-   * @param value Fixture name, UUID or instance to search for. If no present, all fixtures will be returned.
+   * @param filter Fixture name, UUID or instance to search for. If no present, all fixtures will be returned.
    * @returns List of matching fixtures.
    */
-  function getFixture(value) {
-    return repository.get(value);
+  function getFixtures(filter) {
+    return repository.get(filter);
   }
 
   /**
@@ -114,8 +89,8 @@ function Autosave(elements, options) {
    * @param filter A filtering selector, function, DOM element or jQuery object to run against all inputs.
    * @returns jQuery object of matching inputs.
    */
-  function getInput(filter) {
-    var $inputs = $attached.find(":input").addBack().filter(":input");
+  function getInputs(filter) {
+    var $inputs = $element.find(":input").addBack().filter(":input");
     return (filter ? $inputs.filter(filter) : $inputs).not(options.ignore);
   }
 
@@ -124,46 +99,40 @@ function Autosave(elements, options) {
    * @param key The name of an option value to get.
    * @returns Object of option key/value pairs, or a single option value.
    */
-  function getOption(key) {
+  function getOptions(key) {
     return key === undefined ? options : options[key];
+  }
+
+  function getUuid() {
+    return options.namespace + "-" + uuid;
   }
 
   /**
    * Remove fixtures with deferred support.
-   * @param mixed The fixture(s) to remove.
+   * @param fixtures The fixture(s) to remove.
    * @returns Deferred result.
    */
-  function removeFixture(mixed) {
-    return new $.Deferred.Sequence(repository.get(mixed)).reduce(function(fixture) {
+  function removeFixtures(fixtures) {
+    return new $.Deferred.Sequence(getFixtures(fixtures)).reduce(function(fixture) {
       return $.when(fixture.detach(self)).done(function() {
         repository.remove(fixture);
       });
     });
   }
 
-  // Public properties
-  this.classNames = classNames;
-  this.eventNames = eventNames;
-
   // Public methods
+  this.addFixture = this.addFixtures = addFixtures;
   this.attach = attach;
-  this.addFixture = addFixture;
-  this.addFixtures = this.addFixture;
   this.detach = detach;
-  this.getElement = getElement;
-  this.getElements = this.getElement;
-  this.getFixture = getFixture;
-  this.getFixtures = this.getFixture;
-  this.getInput = getInput;
-  this.getInputs = this.getInput;
-  this.getOption = getOption;
-  this.getOptions = this.getOption;
-  this.removeFixture = removeFixture;
-  this.removeFixtures = this.removeFixture;
+  this.getElement = this.getElements = getElements;
+  this.getFixture = this.getFixtures = getFixtures;
+  this.getInput = this.getInputs = getInputs;
+  this.getOption = this.getOptions = getOptions;
+  this.getUuid = getUuid;
+  this.removeFixture = this.removeFixtures = removeFixtures;
 
   // Initialization
-  this.attach(elements);
-  this.addFixtures(fixtures).done(options.ready);
+  this.attach(element, options.fixture || options.fixtures).done(options.ready);
 }
 
 $.extend(Autosave.prototype, {
@@ -180,18 +149,17 @@ $.extend(Autosave.prototype, {
   //   }
   // },
 
-  save: function(event, fixtureFilter, inputFilter, data) {
+  save: function(event, inputFilter, data) {
     var sequence, value;
 
     // Event argument may be omitted
     if (!(event instanceof $.Event)) {
       data = inputFilter;
-      inputFilter = fixtureFilter;
-      fixtureFilter = event;
+      inputFilter = event;
       event = undefined;
     }
 
-    sequence = new $.Deferred.Sequence(this.getFixtures(fixtureFilter));
+    sequence = new $.Deferred.Sequence(this.getFixtures());
     value = {
       data: data,
       event: event,

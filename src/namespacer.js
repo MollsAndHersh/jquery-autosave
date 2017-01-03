@@ -3,12 +3,12 @@ define(function() {
 /* end-build-ignore */
 
   /**
-   * Namespaces a list of strings.
+   * Get a hash of namespaced strings.
    * @param namespace The namespace to use.
    * @param items List of strings.
    * @param separator Separator to use when joining items to namespace.
    * @param before True if namespace should be prefixed, false if namespace should be suffixed.
-   * @returns List of namespaced items.
+   * @returns Object of key/value pairs representing the item and the namespaced item.
    */
   function namespacer(namespace, items, separator, before) {
   var i, item,

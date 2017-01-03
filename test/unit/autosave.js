@@ -1,4 +1,10 @@
-define(["src/jquery-bridge", "qunit", "vendor/fixture", "test/testutils"], function($, QUnit, Fixture, utils) {
+define([
+  "jquery",
+  "qunit",
+  "vendor/fixture",
+  "test/testutils",
+  "src/jquery-bridge"
+], function($, QUnit, Fixture, utils) {
   return function unit() {
     QUnit.module("Autosave", {
       beforeEach: function() {
@@ -85,17 +91,22 @@ define(["src/jquery-bridge", "qunit", "vendor/fixture", "test/testutils"], funct
     });
 
     QUnit.test("attach", function(assert) {
-      var autosave = new $.Autosave();
+      var $qunitFixture = $("#qunit-fixture"),
+        autosave = new $.Autosave();
 
       assert.equal(autosave.getElement().length, 0, "No elements are attached on initialization.");
-
-      autosave.attach("#qunit-fixture");
-
-      assert.equal(autosave.getElement().length, 1, "One element has been attached.");
+      autosave.attach($qunitFixture);
+      assert.equal(autosave.getElement().length, 1, "One element is attached.");
       assert.ok(autosave.getElement().hasClass("autosave"), "Element has namespace class.");
       assert.equal(autosave.getElement().data("autosave"), autosave, "Element has instance stored in data.");
+      autosave.attach("#qunit-fixture [name=text]");
+      assert.ok(!$qunitFixture.hasClass("autosave"), "Detached element does not have namespace class.");
+      assert.ok(!$qunitFixture.data("autosave"), "Detached element does not have instance stored in data.");
+      assert.equal(autosave.getElement().length, 1, "Attached to new element.");
+      assert.ok(autosave.getElement().hasClass("autosave"), "New element has namespace class.");
+      assert.equal(autosave.getElement().data("autosave"), autosave, "New element has instance stored in data.");
 
-      assert.expect(4);
+      assert.expect(9);
     });
 
     QUnit.test("detach", function(assert) {
@@ -124,10 +135,11 @@ define(["src/jquery-bridge", "qunit", "vendor/fixture", "test/testutils"], funct
       });
 
       autosave.detach().done(function() {
+        var $qunitFixture = $("#qunit-fixture");
         assert.ok(true, "Done called.");
         assert.equal(autosave.getElement().length, 0, "Element is not attached.");
-        assert.ok(!$("#qunit-fixture").hasClass("autosave"), "Element does not have namespace class.");
-        assert.ok(!autosave.getElement().data("autosave"), "Element does not have instance stored in data.");
+        assert.ok(!$qunitFixture.hasClass("autosave"), "Element does not have namespace class.");
+        assert.ok(!$qunitFixture.data("autosave"), "Element does not have instance stored in data.");
         expects += 4;
         assert.expect(expects);
         done();
@@ -137,17 +149,11 @@ define(["src/jquery-bridge", "qunit", "vendor/fixture", "test/testutils"], funct
     QUnit.test("getElement(s)", function(assert) {
       var autosave = new $.Autosave();
 
-      assert.equal(autosave.getElement().length, 0, "No elements are attached on initialization.");
-
+      assert.equal(autosave.getElement().length, 0, "Not attached to any elements.");
       autosave.attach("form [name=text]");
+      assert.equal(autosave.getElements().length, 1, "Attached to one element.");
 
-      assert.equal(autosave.getElement().length, 1, "One element has been attached.");
-
-      autosave.attach("form [name=textarea]");
-
-      assert.equal(autosave.getElements().length, 2, "Two elements have been attached.");
-
-      assert.expect(3);
+      assert.expect(2);
     });
 
     QUnit.test("getFixture(s)", function( assert ) {
